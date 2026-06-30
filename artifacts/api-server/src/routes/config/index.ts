@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import {
   db,
   riskTriggersTable,
@@ -7,6 +7,11 @@ import {
   emailTemplatesTable,
   riskReviewRequestsTable,
 } from "@workspace/db";
+import {
+  UpdateRiskTriggerBody,
+  UpdateEmailTemplateBody,
+  UpdateRuleSetBody,
+} from "@workspace/api-zod";
 import {
   mapRiskTrigger,
   mapRuleSet,
@@ -53,6 +58,115 @@ router.get(
   async (_req: Request, res: Response): Promise<void> => {
     const rows = await db.select().from(emailTemplatesTable);
     res.json(rows.map(mapEmailTemplate));
+  },
+);
+
+function parsePathId(req: Request): number | null {
+  const id = Number(req.params.id);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+function pickDefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) out[key as keyof T] = value as T[keyof T];
+  }
+  return out;
+}
+
+// PUT /api/risk-triggers/:id
+router.put(
+  "/risk-triggers/:id",
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parsePathId(req);
+    if (id == null) {
+      res.status(400).json({ message: "Invalid risk trigger id" });
+      return;
+    }
+    const parsed = UpdateRiskTriggerBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+      return;
+    }
+    const values = pickDefined(parsed.data);
+    if (Object.keys(values).length === 0) {
+      res.status(400).json({ message: "No updatable fields provided" });
+      return;
+    }
+    const updated = await db
+      .update(riskTriggersTable)
+      .set(values)
+      .where(eq(riskTriggersTable.id, id))
+      .returning();
+    if (updated.length === 0) {
+      res.status(404).json({ message: "Risk trigger not found" });
+      return;
+    }
+    res.json(mapRiskTrigger(updated[0]));
+  },
+);
+
+// PUT /api/email-templates/:id
+router.put(
+  "/email-templates/:id",
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parsePathId(req);
+    if (id == null) {
+      res.status(400).json({ message: "Invalid email template id" });
+      return;
+    }
+    const parsed = UpdateEmailTemplateBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+      return;
+    }
+    const values = pickDefined(parsed.data);
+    if (Object.keys(values).length === 0) {
+      res.status(400).json({ message: "No updatable fields provided" });
+      return;
+    }
+    const updated = await db
+      .update(emailTemplatesTable)
+      .set(values)
+      .where(eq(emailTemplatesTable.id, id))
+      .returning();
+    if (updated.length === 0) {
+      res.status(404).json({ message: "Email template not found" });
+      return;
+    }
+    res.json(mapEmailTemplate(updated[0]));
+  },
+);
+
+// PUT /api/rule-sets/:id
+router.put(
+  "/rule-sets/:id",
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parsePathId(req);
+    if (id == null) {
+      res.status(400).json({ message: "Invalid rule set id" });
+      return;
+    }
+    const parsed = UpdateRuleSetBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+      return;
+    }
+    const values = pickDefined(parsed.data);
+    if (Object.keys(values).length === 0) {
+      res.status(400).json({ message: "No updatable fields provided" });
+      return;
+    }
+    const updated = await db
+      .update(ruleSetsTable)
+      .set(values)
+      .where(eq(ruleSetsTable.id, id))
+      .returning();
+    if (updated.length === 0) {
+      res.status(404).json({ message: "Rule set not found" });
+      return;
+    }
+    res.json(mapRuleSet(updated[0]));
   },
 );
 

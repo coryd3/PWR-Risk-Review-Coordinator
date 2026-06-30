@@ -225,6 +225,31 @@ export interface RuleSet {
   active: boolean;
 }
 
+export interface RiskTriggerUpdate {
+  triggerName?: string;
+  /** @nullable */
+  triggerDescription?: string | null;
+  isMajorOpportunityTrigger?: boolean;
+  active?: boolean;
+}
+
+export interface EmailTemplateUpdate {
+  templateName?: string;
+  subjectTemplate?: string;
+  bodyTemplate?: string;
+  active?: boolean;
+}
+
+export interface RuleSetUpdate {
+  name?: string;
+  /** @nullable */
+  conditionJson?: string | null;
+  /** @nullable */
+  outputJson?: string | null;
+  priority?: number;
+  active?: boolean;
+}
+
 export interface StatusHistoryEntry {
   id: number;
   requestId: number;

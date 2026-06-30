@@ -422,6 +422,87 @@ paths:
                 items:
                   $ref: "#/components/schemas/EmailTemplate"
 
+  /risk-triggers/{id}:
+    put:
+      operationId: updateRiskTrigger
+      tags: [rules]
+      summary: Update a risk trigger
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskTriggerUpdate"
+      responses:
+        "200":
+          description: Updated risk trigger
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskTrigger"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /email-templates/{id}:
+    put:
+      operationId: updateEmailTemplate
+      tags: [config]
+      summary: Update an email template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailTemplateUpdate"
+      responses:
+        "200":
+          description: Updated email template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTemplate"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /rule-sets/{id}:
+    put:
+      operationId: updateRuleSet
+      tags: [rules]
+      summary: Update a rule set
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleSetUpdate"
+      responses:
+        "200":
+          description: Updated rule set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleSet"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /config:
     get:
       operationId: getConfig
@@ -804,6 +885,44 @@ components:
       properties:
         id:
           type: integer
+        name:
+          type: string
+        conditionJson:
+          type: ["string", "null"]
+        outputJson:
+          type: ["string", "null"]
+        priority:
+          type: integer
+        active:
+          type: boolean
+
+    RiskTriggerUpdate:
+      type: object
+      properties:
+        triggerName:
+          type: string
+        triggerDescription:
+          type: ["string", "null"]
+        isMajorOpportunityTrigger:
+          type: boolean
+        active:
+          type: boolean
+
+    EmailTemplateUpdate:
+      type: object
+      properties:
+        templateName:
+          type: string
+        subjectTemplate:
+          type: string
+        bodyTemplate:
+          type: string
+        active:
+          type: boolean
+
+    RuleSetUpdate:
+      type: object
+      properties:
         name:
           type: string
         conditionJson:

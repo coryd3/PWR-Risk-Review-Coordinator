@@ -324,7 +324,7 @@ function EmailDraftsSection({ requestId }: { requestId: number }) {
   const updateDraft = useUpdateEmailDraft();
 
   const handleGenerate = () => {
-    generateDrafts.mutate({ id: requestId, data: { templateTypes: ["Pre-Risk", "Formal Risk"] } }, {
+    generateDrafts.mutate({ id: requestId, data: {} }, {
       onSuccess: () => {
         toast({ title: "Drafts generated" });
         queryClient.invalidateQueries({ queryKey: getListEmailDraftsQueryKey(requestId) });

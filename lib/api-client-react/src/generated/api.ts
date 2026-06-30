@@ -28,6 +28,7 @@ import type {
   EmailDraft,
   EmailDraftUpdate,
   EmailTemplate,
+  EmailTemplateUpdate,
   GenerateDraftsInput,
   HealthStatus,
   Meeting,
@@ -42,7 +43,9 @@ import type {
   RiskReviewRequestInput,
   RiskReviewRequestUpdate,
   RiskTrigger,
+  RiskTriggerUpdate,
   RuleSet,
+  RuleSetUpdate,
   StatusChangeInput,
   StatusHistoryEntry
 } from './api.schemas';
@@ -1699,6 +1702,219 @@ export function useListEmailTemplates<TData = Awaited<ReturnType<typeof listEmai
 
 
 
+
+export const getUpdateRiskTriggerUrl = (id: number,) => {
+
+
+
+
+  return `/api/risk-triggers/${id}`
+}
+
+/**
+ * @summary Update a risk trigger
+ */
+export const updateRiskTrigger = async (id: number,
+    riskTriggerUpdate: RiskTriggerUpdate, options?: RequestInit): Promise<RiskTrigger> => {
+
+  return customFetch<RiskTrigger>(getUpdateRiskTriggerUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(riskTriggerUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateRiskTriggerMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRiskTrigger>>, TError,{id: number;data: BodyType<RiskTriggerUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRiskTrigger>>, TError,{id: number;data: BodyType<RiskTriggerUpdate>}, TContext> => {
+
+const mutationKey = ['updateRiskTrigger'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRiskTrigger>>, {id: number;data: BodyType<RiskTriggerUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRiskTrigger(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRiskTriggerMutationResult = NonNullable<Awaited<ReturnType<typeof updateRiskTrigger>>>
+    export type UpdateRiskTriggerMutationBody = BodyType<RiskTriggerUpdate>
+    export type UpdateRiskTriggerMutationError = ErrorType<NotFoundResponse>
+
+    /**
+ * @summary Update a risk trigger
+ */
+export const useUpdateRiskTrigger = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRiskTrigger>>, TError,{id: number;data: BodyType<RiskTriggerUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRiskTrigger>>,
+        TError,
+        {id: number;data: BodyType<RiskTriggerUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateRiskTriggerMutationOptions(options));
+    }
+
+export const getUpdateEmailTemplateUrl = (id: number,) => {
+
+
+
+
+  return `/api/email-templates/${id}`
+}
+
+/**
+ * @summary Update an email template
+ */
+export const updateEmailTemplate = async (id: number,
+    emailTemplateUpdate: EmailTemplateUpdate, options?: RequestInit): Promise<EmailTemplate> => {
+
+  return customFetch<EmailTemplate>(getUpdateEmailTemplateUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(emailTemplateUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateEmailTemplateMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEmailTemplate>>, TError,{id: number;data: BodyType<EmailTemplateUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEmailTemplate>>, TError,{id: number;data: BodyType<EmailTemplateUpdate>}, TContext> => {
+
+const mutationKey = ['updateEmailTemplate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEmailTemplate>>, {id: number;data: BodyType<EmailTemplateUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEmailTemplate(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEmailTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof updateEmailTemplate>>>
+    export type UpdateEmailTemplateMutationBody = BodyType<EmailTemplateUpdate>
+    export type UpdateEmailTemplateMutationError = ErrorType<NotFoundResponse>
+
+    /**
+ * @summary Update an email template
+ */
+export const useUpdateEmailTemplate = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEmailTemplate>>, TError,{id: number;data: BodyType<EmailTemplateUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEmailTemplate>>,
+        TError,
+        {id: number;data: BodyType<EmailTemplateUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateEmailTemplateMutationOptions(options));
+    }
+
+export const getUpdateRuleSetUrl = (id: number,) => {
+
+
+
+
+  return `/api/rule-sets/${id}`
+}
+
+/**
+ * @summary Update a rule set
+ */
+export const updateRuleSet = async (id: number,
+    ruleSetUpdate: RuleSetUpdate, options?: RequestInit): Promise<RuleSet> => {
+
+  return customFetch<RuleSet>(getUpdateRuleSetUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(ruleSetUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateRuleSetMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRuleSet>>, TError,{id: number;data: BodyType<RuleSetUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRuleSet>>, TError,{id: number;data: BodyType<RuleSetUpdate>}, TContext> => {
+
+const mutationKey = ['updateRuleSet'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRuleSet>>, {id: number;data: BodyType<RuleSetUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRuleSet(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRuleSetMutationResult = NonNullable<Awaited<ReturnType<typeof updateRuleSet>>>
+    export type UpdateRuleSetMutationBody = BodyType<RuleSetUpdate>
+    export type UpdateRuleSetMutationError = ErrorType<NotFoundResponse>
+
+    /**
+ * @summary Update a rule set
+ */
+export const useUpdateRuleSet = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRuleSet>>, TError,{id: number;data: BodyType<RuleSetUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRuleSet>>,
+        TError,
+        {id: number;data: BodyType<RuleSetUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateRuleSetMutationOptions(options));
+    }
 
 export const getGetConfigUrl = () => {
 

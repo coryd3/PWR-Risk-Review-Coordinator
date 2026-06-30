@@ -828,6 +828,82 @@ export const ListEmailTemplatesResponse = zod.array(ListEmailTemplatesResponseIt
 
 
 /**
+ * @summary Update a risk trigger
+ */
+export const UpdateRiskTriggerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRiskTriggerBody = zod.object({
+  "triggerName": zod.string().optional(),
+  "triggerDescription": zod.string().nullish(),
+  "isMajorOpportunityTrigger": zod.boolean().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateRiskTriggerResponse = zod.object({
+  "id": zod.number(),
+  "triggerNumber": zod.number(),
+  "triggerName": zod.string(),
+  "triggerDescription": zod.string().nullish(),
+  "isMajorOpportunityTrigger": zod.boolean(),
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary Update an email template
+ */
+export const UpdateEmailTemplateParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEmailTemplateBody = zod.object({
+  "templateName": zod.string().optional(),
+  "subjectTemplate": zod.string().optional(),
+  "bodyTemplate": zod.string().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateEmailTemplateResponse = zod.object({
+  "id": zod.number(),
+  "templateName": zod.string(),
+  "templateType": zod.string(),
+  "appliesToMajor": zod.boolean().nullish(),
+  "appliesToBusinessLine": zod.string().nullish(),
+  "appliesToRequestType": zod.string().nullish(),
+  "subjectTemplate": zod.string(),
+  "bodyTemplate": zod.string(),
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary Update a rule set
+ */
+export const UpdateRuleSetParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateRuleSetBody = zod.object({
+  "name": zod.string().optional(),
+  "conditionJson": zod.string().nullish(),
+  "outputJson": zod.string().nullish(),
+  "priority": zod.number().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateRuleSetResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "conditionJson": zod.string().nullish(),
+  "outputJson": zod.string().nullish(),
+  "priority": zod.number(),
+  "active": zod.boolean()
+})
+
+
+/**
  * @summary Get configuration options (enums and static rules)
  */
 export const GetConfigResponse = zod.object({
