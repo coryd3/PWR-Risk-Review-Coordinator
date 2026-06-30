@@ -207,10 +207,10 @@ router.put("/requests/:id", async (req: Request, res: Response): Promise<void> =
       .where(eq(riskReviewRequestsTable.id, id));
   }
 
-  if (triggerIds) {
+  if (triggerIds !== undefined) {
     await replaceTriggers(id, triggerIds);
   }
-  if (attendees) {
+  if (attendees !== undefined) {
     await replaceAttendees(id, attendees);
   }
   await recomputeClassification(id);
