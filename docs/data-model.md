@@ -17,7 +17,7 @@ PostgreSQL via Drizzle ORM. Schema lives in `lib/db/src/schema/` (barrel: `index
 | `status_history`        | Append-only record of status changes (from/to status, next action, author, timestamp). |
 | `notes`                 | Free-text notes on a request (body, author, timestamp).               |
 | `audit_events`          | Generic audit log of changes for traceability.                        |
-| `imported_tracker_rows` | Staging table for the future Excel tracker import (unused in MVP).     |
+| `imported_tracker_rows` | Staging table for the legacy Excel/CSV tracker import (`scripts/import-tracker.ts`): raw row JSON, content hash for idempotency, link to the created request, status/error. |
 
 ## Key relationships
 

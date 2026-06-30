@@ -39,7 +39,8 @@ db/
   schema.sql           Portable schema snapshot (pg_dump)
   migrations/          Drizzle-generated SQL migrations
 scripts/
-  import-tracker.ts    Stub for the future Excel tracker import
+  import-tracker.ts    Legacy Excel/CSV risk-tracker importer (idempotent)
+  fixtures/            Fake sample tracker for testing the importer
 docs/                  Product, data model, rules/templates, Databricks notes
 app.yaml               Databricks App start command
 .env.example           Environment variable reference
@@ -56,6 +57,49 @@ pnpm run db:migrate   # apply the Drizzle schema to the database
 pnpm run db:seed      # load 20 risk triggers, templates, rules, and sample requests
 ```
 
+## Importing the legacy Excel tracker
+
+`scripts/import-tracker.ts` migrates the team's old "risk review tracker"
+spreadsheet (the legacy MS Forms + Power Automate + Excel workflow) into the
+database so historical reviews are not lost. It accepts `.xlsx`, `.xls`, or
+`.csv` files.
+
+```bash
+# Run the importer (run db:migrate and db:seed first so the 20 risk triggers exist):
+pnpm run db:import scripts/fixtures/sample-tracker.csv
+
+# Preview without writing anything:
+pnpm run db:import scripts/fixtures/sample-tracker.csv --dry-run
+```
+
+What it does for each spreadsheet row:
+
+- **Stages** the raw row verbatim into `imported_tracker_rows` (JSON + a content
+  hash) for auditing.
+- **Normalizes** it: money strings (`"$45,000,000"`) → numeric, business-line
+  cells → array, the free-text risk-trigger column (numbers like `"1, 5"` or
+  trigger names) → canonical `risk_triggers`, and per-role columns → `attendees`.
+- **Creates** a `risk_review_request` plus its `request_risk_triggers`,
+  `attendees`, and `meetings` (synthesized from the target dates present),
+  running the same Major/Non-Major + business-line classification the API uses.
+- **Reports** a summary — rows read, imported, skipped (with reasons), errors.
+  Rows are never silently dropped; unmatched trigger text is appended to the
+  request notes.
+
+The importer is **idempotent**: re-running the same file skips rows already
+imported (matched by content hash) and never creates a duplicate request for a
+CRM opportunity number that already exists. Column headers are matched
+case/spacing-insensitively with common aliases (e.g. `TIC` →
+Total Installed Cost). It performs **no** email/Outlook/Graph calls — it only
+reads the local file and writes to `DATABASE_URL`.
+
+Header columns recognized (aliases accepted): Requester Name/Email, Client Name,
+Project Name, CRM Opportunity Number, BMcD Contract Value, Total Installed Cost
+(TIC), Business Line(s), Contract Review RVW #, EPC Prime, Request Type, Risk
+Identification Status, the Pre-Risk/Formal Risk/Proposal/Formal Risk
+Discussion/Final Risk dates, Pre-Risk Lead, Formal Risk Lead, Status, Next
+Action, Owner, Risk Triggers, Notes, and one column per attendee role.
+
 ## Running with npm / pnpm scripts (portable)
 
 Root `package.json` exposes the standard scripts (these also work via `npm run …`):
@@ -67,6 +111,7 @@ Root `package.json` exposes the standard scripts (these also work via `npm run �
 | `pnpm run start`    | Production: one Node process serving the API **and** the built frontend. |
 | `pnpm run db:migrate` | Apply the Drizzle schema to the database (`DATABASE_URL`).           |
 | `pnpm run db:seed`  | Seed triggers, templates, rules, and sample requests.                 |
+| `pnpm run db:import <file>` | Import a legacy Excel/CSV risk tracker (idempotent). See above. |
 
 Production startup order: `pnpm run build` then `pnpm run start`.
 
@@ -83,7 +128,7 @@ See `.env.example`. Key ones:
 
 - No real email send, Outlook event creation, Microsoft Graph / Teams calls, or availability lookup — **stubs only** (`src/integrations/outlook/*` throw "Not implemented in MVP").
 - No authentication / user accounts — `owner` / change author use placeholder coordinator values.
-- Full Excel tracker import is a documented stub (`scripts/import-tracker.ts`).
+- Legacy Excel/CSV tracker import is implemented (`scripts/import-tracker.ts`); see "Importing the legacy Excel tracker" above.
 - No actual Databricks deployment — only readiness (config + docs). See `docs/databricks-deployment-notes.md`.
 
 ## Further documentation

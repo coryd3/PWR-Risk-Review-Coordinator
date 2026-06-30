@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jFeJ5vYP9t9HQF7srnFHbSzmghpQNnTOL6U5XTjplgq6fcS24ASF8Zb8gYlnQ7M
+\restrict MemkqPc0NsKfmx5aPOiOfQTNgx4UH8wNmBhuDzmKEh8bQGoWWzt5NnByvj5Avgw
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -179,7 +179,13 @@ CREATE TABLE public.imported_tracker_rows (
     id integer NOT NULL,
     source_row text NOT NULL,
     imported_at timestamp with time zone DEFAULT now() NOT NULL,
-    processed boolean DEFAULT false NOT NULL
+    processed boolean DEFAULT false NOT NULL,
+    source_file text,
+    row_number integer,
+    row_hash text NOT NULL,
+    request_id integer,
+    status text DEFAULT 'pending'::text NOT NULL,
+    error text
 );
 
 
@@ -596,6 +602,14 @@ ALTER TABLE ONLY public.imported_tracker_rows
 
 
 --
+-- Name: imported_tracker_rows imported_tracker_rows_row_hash_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.imported_tracker_rows
+    ADD CONSTRAINT imported_tracker_rows_row_hash_unique UNIQUE (row_hash);
+
+
+--
 -- Name: meetings meetings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -668,6 +682,14 @@ ALTER TABLE ONLY public.email_drafts
 
 
 --
+-- Name: imported_tracker_rows imported_tracker_rows_request_id_risk_review_requests_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.imported_tracker_rows
+    ADD CONSTRAINT imported_tracker_rows_request_id_risk_review_requests_id_fk FOREIGN KEY (request_id) REFERENCES public.risk_review_requests(id) ON DELETE SET NULL;
+
+
+--
 -- Name: meetings meetings_request_id_risk_review_requests_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -711,5 +733,5 @@ ALTER TABLE ONLY public.status_history
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jFeJ5vYP9t9HQF7srnFHbSzmghpQNnTOL6U5XTjplgq6fcS24ASF8Zb8gYlnQ7M
+\unrestrict MemkqPc0NsKfmx5aPOiOfQTNgx4UH8wNmBhuDzmKEh8bQGoWWzt5NnByvj5Avgw
 

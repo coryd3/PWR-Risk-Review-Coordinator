@@ -2,3 +2,4 @@
 - [Drizzle partial update guard](drizzle-partial-update.md) — `.set({})` throws 500 "No values to set"; always strip undefined and 400 on empty body.
 - [Audit events requirement](audit-events.md) — every mutating API path must call recordAudit(); acceptance review fails if audit_events stays unwritten.
 - [Required attendee roles](required-attendee-roles.md) — 6 mandatory roles; single source REQUIRED_ATTENDEE_ROLES drives warnings, /config, and form pre-seeding.
+- [DB & scripts tooling](db-and-scripts-tooling.md) — drizzle generate is broken (use push + pg_dump); scripts need drizzle-orm direct dep; xlsx ESM has no readFile.

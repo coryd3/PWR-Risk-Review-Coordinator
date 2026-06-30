@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs",
     "db:migrate": "pnpm --filter @workspace/db run push",
     "db:seed": "pnpm --filter @workspace/db run seed",
+    "db:import": "pnpm --filter @workspace/scripts run import --",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
