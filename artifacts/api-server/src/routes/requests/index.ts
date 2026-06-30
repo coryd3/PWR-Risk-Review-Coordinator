@@ -43,6 +43,7 @@ import {
   defaultTemplateTypesForRequest,
 } from "../../lib/templates";
 import { buildCalendarPreview } from "../../lib/calendar";
+import { recordAudit } from "../../lib/audit";
 
 const router: IRouter = Router();
 
@@ -103,6 +104,14 @@ router.post("/requests", async (req: Request, res: Response): Promise<void> => {
     await replaceAttendees(created.id, body.attendees);
   }
   await recomputeClassification(created.id);
+
+  await recordAudit(req, {
+    entityType: "request",
+    entityId: created.id,
+    action: "create",
+    actor: body.requesterEmail ?? body.requesterName ?? null,
+    detail: { projectName: created.projectName, status: created.status },
+  });
 
   const detail = await loadRequestDetail(created.id);
   if (!detail) {
@@ -197,6 +206,12 @@ router.put("/requests/:id", async (req: Request, res: Response): Promise<void> =
   }
   await recomputeClassification(id);
 
+  await recordAudit(req, {
+    entityType: "request",
+    entityId: id,
+    action: "update",
+  });
+
   const detail = await loadRequestDetail(id);
   if (!detail) {
     res.status(404).json({ message: "Request not found" });
@@ -238,6 +253,12 @@ router.delete(
     await db
       .delete(riskReviewRequestsTable)
       .where(eq(riskReviewRequestsTable.id, id));
+    await recordAudit(req, {
+      entityType: "request",
+      entityId: id,
+      action: "delete",
+      detail: { projectName: existing.projectName },
+    });
     res.status(204).send();
   },
 );
@@ -256,6 +277,15 @@ router.post(
       res.status(404).json({ message: "Request not found" });
       return;
     }
+    await recordAudit(req, {
+      entityType: "request",
+      entityId: id,
+      action: "classify",
+      detail: {
+        isMajorOpportunity: updated.isMajorOpportunity,
+        businessLineClassification: updated.businessLineClassification,
+      },
+    });
     const [triggers, attendees] = await Promise.all([
       getTriggersForRequest(id),
       getAttendeesForRequest(id),
@@ -317,6 +347,12 @@ router.post(
         notes: body.notes ?? null,
       })
       .returning();
+    await recordAudit(req, {
+      entityType: "meeting",
+      entityId: inserted[0].id,
+      action: "create",
+      detail: { requestId: id, meetingType: inserted[0].meetingType },
+    });
     res.status(201).json(mapMeeting(inserted[0]));
   },
 );
@@ -390,6 +426,12 @@ router.post(
         .returning();
       created.push(mapEmailDraft(inserted[0]));
     }
+    await recordAudit(req, {
+      entityType: "email_draft",
+      entityId: id,
+      action: "generate",
+      detail: { requestId: id, count: created.length, types },
+    });
     res.status(201).json(created);
   },
 );
@@ -435,6 +477,13 @@ router.post(
         createdBy: body.createdBy ?? null,
       })
       .returning();
+    await recordAudit(req, {
+      entityType: "note",
+      entityId: inserted[0].id,
+      action: "create",
+      actor: body.createdBy ?? null,
+      detail: { requestId: id },
+    });
     res.status(201).json(mapNote(inserted[0]));
   },
 );
@@ -469,6 +518,16 @@ router.post(
       })
       .where(eq(riskReviewRequestsTable.id, id))
       .returning();
+    await recordAudit(req, {
+      entityType: "request",
+      entityId: id,
+      action: "status_change",
+      actor: body.changedBy ?? null,
+      detail: {
+        previousStatus: existing.status,
+        newStatus: body.newStatus,
+      },
+    });
     res.json(mapRequest(updated[0]));
   },
 );

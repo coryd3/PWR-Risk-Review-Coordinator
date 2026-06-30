@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, emailDraftsTable } from "@workspace/db";
 import { UpdateEmailDraftBody } from "@workspace/api-zod";
 import { mapEmailDraft } from "../../lib/mappers";
+import { recordAudit } from "../../lib/audit";
 
 const router: IRouter = Router();
 
@@ -46,6 +47,12 @@ router.put(
       })
       .where(eq(emailDraftsTable.id, id))
       .returning();
+    await recordAudit(req, {
+      entityType: "email_draft",
+      entityId: id,
+      action: nowSent ? "sent_manually" : "update",
+      detail: { requestId: current.requestId, status: updated[0].status },
+    });
     res.json(mapEmailDraft(updated[0]));
   },
 );

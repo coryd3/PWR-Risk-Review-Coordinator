@@ -693,46 +693,7 @@ export const ChangeStatusResponse = zod.object({
   "status": zod.string().nullish(),
   "nextAction": zod.string().nullish(),
   "owner": zod.string().nullish(),
-  "notes": zod.string().nullish(),
-  "triggers": zod.array(zod.object({
-  "id": zod.number(),
-  "triggerNumber": zod.number(),
-  "triggerName": zod.string(),
-  "triggerDescription": zod.string().nullish(),
-  "isMajorOpportunityTrigger": zod.boolean(),
-  "active": zod.boolean()
-})).optional(),
-  "attendees": zod.array(zod.object({
-  "id": zod.number(),
-  "requestId": zod.number(),
-  "name": zod.string().nullish(),
-  "email": zod.string().nullish(),
-  "role": zod.string(),
-  "attendeeType": zod.string().nullish(),
-  "source": zod.string().nullish(),
-  "isRequired": zod.boolean().optional()
-})).optional(),
-  "meetings": zod.array(zod.object({
-  "id": zod.number(),
-  "requestId": zod.number(),
-  "meetingType": zod.string(),
-  "targetDate": zod.string().nullish(),
-  "scheduledStart": zod.string().nullish(),
-  "scheduledEnd": zod.string().nullish(),
-  "timezone": zod.string().nullish(),
-  "subject": zod.string().nullish(),
-  "body": zod.string().nullish(),
-  "teamsLink": zod.string().nullish(),
-  "outlookEventId": zod.string().nullish(),
-  "status": zod.string(),
-  "riskLead": zod.string().nullish(),
-  "rescheduledCount": zod.number(),
   "notes": zod.string().nullish()
-})).optional(),
-  "warnings": zod.array(zod.object({
-  "code": zod.string(),
-  "message": zod.string()
-})).optional()
 })
 
 

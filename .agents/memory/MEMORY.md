@@ -1,2 +1,3 @@
 - [Config edit endpoints](risk-coordinator-config-edit.md) — adding admin-editable config requires new openapi PUT paths + orval codegen, not just a route handler.
 - [Drizzle partial update guard](drizzle-partial-update.md) — `.set({})` throws 500 "No values to set"; always strip undefined and 400 on empty body.
+- [Audit events requirement](audit-events.md) — every mutating API path must call recordAudit(); acceptance review fails if audit_events stays unwritten.

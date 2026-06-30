@@ -1265,9 +1265,9 @@ export const getChangeStatusUrl = (id: number,) => {
  * @summary Change request status and record history
  */
 export const changeStatus = async (id: number,
-    statusChangeInput: StatusChangeInput, options?: RequestInit): Promise<RiskReviewRequestDetail> => {
+    statusChangeInput: StatusChangeInput, options?: RequestInit): Promise<RiskReviewRequest> => {
 
-  return customFetch<RiskReviewRequestDetail>(getChangeStatusUrl(id),
+  return customFetch<RiskReviewRequest>(getChangeStatusUrl(id),
   {
     ...options,
     method: 'POST',

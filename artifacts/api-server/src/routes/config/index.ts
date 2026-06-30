@@ -17,6 +17,7 @@ import {
   mapRuleSet,
   mapEmailTemplate,
 } from "../../lib/mappers";
+import { recordAudit } from "../../lib/audit";
 import {
   REQUEST_STATUSES,
   NEXT_ACTIONS,
@@ -102,6 +103,12 @@ router.put(
       res.status(404).json({ message: "Risk trigger not found" });
       return;
     }
+    await recordAudit(req, {
+      entityType: "risk_trigger",
+      entityId: id,
+      action: "update",
+      detail: { fields: Object.keys(values) },
+    });
     res.json(mapRiskTrigger(updated[0]));
   },
 );
@@ -134,6 +141,12 @@ router.put(
       res.status(404).json({ message: "Email template not found" });
       return;
     }
+    await recordAudit(req, {
+      entityType: "email_template",
+      entityId: id,
+      action: "update",
+      detail: { fields: Object.keys(values) },
+    });
     res.json(mapEmailTemplate(updated[0]));
   },
 );
@@ -166,6 +179,12 @@ router.put(
       res.status(404).json({ message: "Rule set not found" });
       return;
     }
+    await recordAudit(req, {
+      entityType: "rule_set",
+      entityId: id,
+      action: "update",
+      detail: { fields: Object.keys(values) },
+    });
     res.json(mapRuleSet(updated[0]));
   },
 );

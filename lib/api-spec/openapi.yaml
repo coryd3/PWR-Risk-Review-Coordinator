@@ -329,11 +329,11 @@ paths:
               $ref: "#/components/schemas/StatusChangeInput"
       responses:
         "200":
-          description: Updated request detail
+          description: Updated request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RiskReviewRequestDetail"
+                $ref: "#/components/schemas/RiskReviewRequest"
         "404":
           $ref: "#/components/responses/NotFound"
 

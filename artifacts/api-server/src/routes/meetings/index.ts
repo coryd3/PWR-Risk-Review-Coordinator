@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import { UpdateMeetingBody } from "@workspace/api-zod";
 import { mapMeeting, mapMeetingWithRequest } from "../../lib/mappers";
+import { recordAudit } from "../../lib/audit";
 
 const router: IRouter = Router();
 
@@ -92,6 +93,12 @@ router.put("/meetings/:id", async (req: Request, res: Response): Promise<void> =
     })
     .where(eq(meetingsTable.id, id))
     .returning();
+  await recordAudit(req, {
+    entityType: "meeting",
+    entityId: id,
+    action: "update",
+    detail: { requestId: current.requestId },
+  });
   res.json(mapMeeting(updated[0]));
 });
 
