@@ -553,6 +553,7 @@ export interface AppConfig {
   attendeeRoles: string[];
   epcPrimeRoles: string[];
   standardRoles: string[];
+  requiredAttendeeRoles: string[];
   requestTypes: string[];
   riskIdentificationStatuses: string[];
   draftStatuses: string[];

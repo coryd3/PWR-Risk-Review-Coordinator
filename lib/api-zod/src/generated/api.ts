@@ -876,6 +876,7 @@ export const GetConfigResponse = zod.object({
   "attendeeRoles": zod.array(zod.string()),
   "epcPrimeRoles": zod.array(zod.string()),
   "standardRoles": zod.array(zod.string()),
+  "requiredAttendeeRoles": zod.array(zod.string()),
   "requestTypes": zod.array(zod.string()),
   "riskIdentificationStatuses": zod.array(zod.string()),
   "draftStatuses": zod.array(zod.string()),

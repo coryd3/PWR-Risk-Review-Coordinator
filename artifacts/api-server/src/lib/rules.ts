@@ -5,6 +5,7 @@ import type {
   RiskTriggerRow,
   AttendeeRow,
 } from "@workspace/db";
+import { REQUIRED_ATTENDEE_ROLES } from "./constants";
 
 export interface ValidationWarning {
   code: string;
@@ -141,11 +142,8 @@ export function computeWarnings(
   return warnings;
 }
 
-// Required roles whose absence triggers a warning. Kept intentionally small
-// (legal/lead roles). TODO: make configurable via static attendee rules.
-function getRequiredRoles(isEpcPrime: boolean): string[] {
-  if (isEpcPrime) {
-    return ["Business-Line Director", "Project Manager", "Attorney"];
-  }
-  return ["Attorney"];
+// Required roles whose absence triggers a warning. These must exist on every
+// request and be populated with a name, regardless of EPC-prime status.
+function getRequiredRoles(_isEpcPrime: boolean): string[] {
+  return [...REQUIRED_ATTENDEE_ROLES];
 }

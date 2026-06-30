@@ -87,6 +87,18 @@ export const STANDARD_ROLES = [
 
 export const ATTENDEE_ROLES = EPC_PRIME_ROLES;
 
+// Roles that must exist on every request and be populated with a name. These
+// are enforced in the request form (pre-seeded, non-removable, name required)
+// and flagged by computeWarnings when missing.
+export const REQUIRED_ATTENDEE_ROLES = [
+  "Business-Line Director",
+  "Project Manager",
+  "Engineering Manager",
+  "Biz Develop/Capture Manager",
+  "Executive-in-Charge",
+  "Attorney",
+] as const;
+
 export const REQUEST_TYPES = [
   "Pre-Risk & Formal Risk Discussion",
   "Final Risk Review",

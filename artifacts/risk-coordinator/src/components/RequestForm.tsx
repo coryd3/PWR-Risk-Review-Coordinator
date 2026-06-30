@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useEffect, useRef } from "react";
 import { useGetConfig, useListRiskTriggers, useCreateRequest, useUpdateRequest, getGetRequestQueryKey, getListRequestsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -107,10 +108,30 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
     },
   });
 
-  const { fields: attendeeFields, append: appendAttendee, remove: removeAttendee } = useFieldArray({
+  const { fields: attendeeFields, append: appendAttendee, remove: removeAttendee, replace: replaceAttendees } = useFieldArray({
     control: form.control,
     name: "attendees",
   });
+
+  const requiredRoles = config?.requiredAttendeeRoles ?? [];
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (!config || seeded.current) return;
+    seeded.current = true;
+    const current = form.getValues("attendees") || [];
+    const firstByRole = new Map<string, { role: string; name?: string; email?: string }>();
+    for (const a of current) if (!firstByRole.has(a.role)) firstByRole.set(a.role, a);
+    // One canonical row per required role at the top (reusing the first existing
+    // attendee for that role if present), then every other attendee preserved in
+    // order — including any additional same-role duplicates.
+    const requiredRows = requiredRoles.map(
+      (r) => firstByRole.get(r) ?? { role: r, name: "", email: "" },
+    );
+    const usedRequired = new Set(requiredRows);
+    const others = current.filter((a) => !usedRequired.has(a));
+    replaceAttendees([...requiredRows, ...others]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
 
   if (loadingConfig || loadingTriggers) {
     return <div className="space-y-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-64 w-full" /></div>;
@@ -119,6 +140,29 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
   const roleOptions = config?.attendeeRoles ?? [];
 
   const onSubmit = (values: RequestFormValues) => {
+    const attendeeList = values.attendees || [];
+    const missingRequired: string[] = [];
+    requiredRoles.forEach((role) => {
+      const hasName = attendeeList.some(
+        (a) => a.role === role && a.name && a.name.trim() !== "",
+      );
+      if (!hasName) {
+        const idx = attendeeList.findIndex((a) => a.role === role);
+        if (idx >= 0) {
+          form.setError(`attendees.${idx}.name`, { type: "required", message: "Required" });
+        }
+        missingRequired.push(role);
+      }
+    });
+    if (missingRequired.length > 0) {
+      toast({
+        title: "Required attendees missing",
+        description: `Please provide a name for: ${missingRequired.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const clean = <T,>(v: T) => (v === "" ? undefined : v);
     const data = {
       ...values,
@@ -335,16 +379,23 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
               <Plus className="w-4 h-4 mr-1" /> Add Attendee
             </Button>
           </div>
+          {requiredRoles.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Roles marked <span className="text-destructive">*</span> are required and must have a name.
+            </p>
+          )}
           {attendeeFields.length === 0 && (
             <p className="text-sm text-muted-foreground">No attendees added yet.</p>
           )}
           <div className="space-y-3">
-            {attendeeFields.map((af, index) => (
+            {attendeeFields.map((af, index) => {
+              const isRequired = index < requiredRoles.length;
+              return (
               <div key={af.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.5fr_auto] gap-3 items-end rounded-md border p-3">
                 <FormField control={form.control} name={`attendees.${index}.role`} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Role</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <FormLabel className="text-xs">Role{isRequired && <span className="text-destructive"> *</span>}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || undefined} disabled={isRequired}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Role" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {roleOptions.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
@@ -353,16 +404,21 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
                   </FormItem>
                 )} />
                 <FormField control={form.control} name={`attendees.${index}.name`} render={({ field }) => (
-                  <FormItem><FormLabel className="text-xs">Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-xs">Name{isRequired && <span className="text-destructive"> *</span>}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name={`attendees.${index}.email`} render={({ field }) => (
                   <FormItem><FormLabel className="text-xs">Email</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
                 )} />
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeAttendee(index)} className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                {isRequired ? (
+                  <div className="h-10 w-10" aria-hidden="true" />
+                ) : (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeAttendee(index)} className="text-muted-foreground hover:text-destructive">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
