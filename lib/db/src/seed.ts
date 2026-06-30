@@ -211,8 +211,8 @@ async function main() {
   const samples: {
     request: typeof riskReviewRequestsTable.$inferInsert;
     triggerNumbers: number[];
-    attendees: (typeof attendeesTable.$inferInsert)[];
-    meetings: (typeof meetingsTable.$inferInsert)[];
+    attendees: Omit<typeof attendeesTable.$inferInsert, "requestId">[];
+    meetings: Omit<typeof meetingsTable.$inferInsert, "requestId">[];
   }[] = [
     {
       request: {

@@ -76,56 +76,56 @@
   --elevate-2: rgba(0,0,0, .08);
 
   --background: 210 20% 98%;
-  --foreground: 220 30% 15%;
+  --foreground: 214 83% 12%;
 
   --border: 214 20% 90%;
 
   --card: 0 0% 100%;
-  --card-foreground: 220 30% 15%;
+  --card-foreground: 214 83% 12%;
   --card-border: 214 20% 90%;
 
-  --sidebar: 220 30% 15%;
+  --sidebar: 214 83% 12%;
   --sidebar-foreground: 210 20% 95%;
-  --sidebar-border: 220 20% 20%;
-  --sidebar-primary: 36 90% 55%;
-  --sidebar-primary-foreground: 210 20% 98%;
-  --sidebar-accent: 220 25% 22%;
+  --sidebar-border: 214 60% 18%;
+  --sidebar-primary: 216 100% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 214 60% 18%;
   --sidebar-accent-foreground: 210 20% 95%;
-  --sidebar-ring: 36 90% 55%;
+  --sidebar-ring: 216 100% 50%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 220 30% 15%;
+  --popover-foreground: 214 83% 12%;
   --popover-border: 214 20% 90%;
 
-  --primary: 36 90% 55%;
+  --primary: 214 83% 12%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 20% 25%;
-  --secondary-foreground: 210 20% 98%;
+  --secondary: 200 10% 36%;
+  --secondary-foreground: 0 0% 100%;
 
   --muted: 214 15% 94%;
-  --muted-foreground: 216 10% 45%;
+  --muted-foreground: 200 10% 36%;
 
-  --accent: 214 15% 94%;
-  --accent-foreground: 220 30% 15%;
+  --accent: 216 100% 50%;
+  --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 214 20% 85%;
-  --ring: 36 90% 55%;
+  --ring: 216 100% 50%;
 
-  --chart-1: 36 90% 55%;
-  --chart-2: 220 20% 25%;
-  --chart-3: 160 60% 45%;
+  --chart-1: 214 83% 12%;
+  --chart-2: 216 100% 50%;
+  --chart-3: 200 10% 36%;
   --chart-4: 340 50% 60%;
   --chart-5: 280 60% 60%;
 
-  --app-font-sans: 'Outfit', sans-serif;
+  --app-font-sans: 'Roboto', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'Space Mono', monospace;
   
-  --radius: 0.25rem;
+  --radius: 1.5rem;
   
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -145,48 +145,48 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 220 30% 12%;
+  --background: 214 83% 8%;
   --foreground: 210 20% 98%;
 
-  --border: 220 20% 20%;
+  --border: 214 40% 18%;
 
-  --card: 220 25% 15%;
+  --card: 214 83% 12%;
   --card-foreground: 210 20% 98%;
-  --card-border: 220 20% 20%;
+  --card-border: 214 40% 18%;
 
-  --sidebar: 220 30% 10%;
+  --sidebar: 214 83% 10%;
   --sidebar-foreground: 210 20% 95%;
-  --sidebar-border: 220 20% 18%;
-  --sidebar-primary: 36 90% 55%;
+  --sidebar-border: 214 40% 18%;
+  --sidebar-primary: 216 100% 50%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 25% 18%;
+  --sidebar-accent: 214 40% 18%;
   --sidebar-accent-foreground: 210 20% 95%;
-  --sidebar-ring: 36 90% 55%;
+  --sidebar-ring: 216 100% 50%;
 
-  --popover: 220 25% 15%;
+  --popover: 214 83% 12%;
   --popover-foreground: 210 20% 98%;
-  --popover-border: 220 20% 20%;
+  --popover-border: 214 40% 18%;
 
-  --primary: 36 90% 55%;
+  --primary: 216 100% 50%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 20% 25%;
+  --secondary: 200 10% 36%;
   --secondary-foreground: 210 20% 98%;
 
-  --muted: 220 20% 20%;
+  --muted: 214 40% 18%;
   --muted-foreground: 216 10% 65%;
 
-  --accent: 220 20% 20%;
-  --accent-foreground: 210 20% 98%;
+  --accent: 216 100% 50%;
+  --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 220 20% 25%;
-  --ring: 36 90% 55%;
+  --input: 214 40% 18%;
+  --ring: 216 100% 50%;
 
-  --chart-1: 36 90% 55%;
-  --chart-2: 220 20% 35%;
+  --chart-1: 216 100% 50%;
+  --chart-2: 214 40% 60%;
   --chart-3: 160 60% 45%;
   --chart-4: 340 50% 60%;
   --chart-5: 280 60% 60%;
@@ -199,6 +199,10 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
   }
 }
 

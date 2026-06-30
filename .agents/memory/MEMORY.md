@@ -1,1 +1,1 @@
-- [TS project references need rebuild](ts-project-references.md) — after editing a referenced composite lib (lib/db, lib/api-zod), rebuild its declarations or consumers see "no exported member".
+- [Vite build PORT/BASE_PATH + seed typing](build-port-basepath.md) — root build injects placeholder PORT/BASE_PATH, excludes mockup-sandbox; seed arrays must Omit requestId so tsc --build passes.
