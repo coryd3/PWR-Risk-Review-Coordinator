@@ -1,0 +1,1163 @@
+You are building the initial MVP for a web application called **PWR Risk Review Coordinator**.
+
+This application will replace an existing Microsoft Forms + Power Automate + Excel tracker workflow used to intake, coordinate, schedule, and track PWR risk review meetings.
+
+The first version should be a working MVP that runs in Replit, but the codebase must be designed so it can later be exported and deployed as a **Databricks App**.
+
+Do not build this as a throwaway Replit prototype. Build it as a clean, portable, production-minded repo.
+
+---
+
+# 1. Primary Goal
+
+Build a web app that allows a coordinator to:
+
+1. Create and review risk review scheduling requests.
+2. Track all active and completed risk review requests in a dashboard.
+3. Classify each request as Major or Non-Major.
+4. Classify the business line.
+5. Track Pre-Risk, Formal Risk, and Final Risk workflow stages.
+6. Generate editable email drafts.
+7. Generate calendar invite preview data.
+8. Track meeting dates, target dates, leads, statuses, next actions, notes, and reschedules.
+9. Maintain configurable business rules and email templates.
+10. Prepare the codebase for later Outlook/Graph and Databricks integration.
+
+The MVP should not send real emails or create real Outlook calendar events yet. It should generate previews/drafts only.
+
+---
+
+# 2. Required Tech Stack
+
+Use:
+
+- React
+- TypeScript
+- Vite
+- Express
+- Node.js
+- PostgreSQL-compatible data layer
+- SQL migrations
+- Environment-variable-based configuration
+
+Use a single Node/Express app that serves the React frontend in production. Avoid separate production frontend and backend deployment processes.
+
+Use a clean folder structure.
+
+Preferred structure:
+
+```text
+/
+  app.yaml
+  package.json
+  package-lock.json
+  README.md
+  .env.example
+
+  docs/
+    product-requirements.md
+    databricks-deployment-notes.md
+    data-model.md
+    rules-and-template-notes.md
+
+  db/
+    schema.sql
+    migrations/
+    seed/
+
+  src/
+    client/
+      components/
+      pages/
+      api/
+      routes/
+      styles/
+      types/
+
+    server/
+      index.ts
+      routes/
+      services/
+      db/
+      rules/
+      templates/
+      integrations/
+        outlook/
+        databricks/
+3. Things You Must Not Use
+
+Do not use:
+
+Replit Database
+Firebase
+Supabase
+localStorage as the primary data store
+Hardcoded business logic inside React components
+Hardcoded secrets
+Real email sending
+Real Outlook calendar creation
+Real Microsoft Graph calls
+Real company employee names in seed data
+Real company opportunity data in seed data
+
+Use placeholder people and sample projects only.
+
+The app should be usable with sample data, but the architecture should support real data later.
+
+4. Required Runtime Behavior
+
+The app must support these commands:
+
+npm run dev
+npm run build
+npm run start
+
+The production app must run with:
+
+npm run start
+
+The Express server must listen on:
+
+process.env.DATABRICKS_APP_PORT || process.env.PORT || 3000
+
+The Express server must bind to:
+
+0.0.0.0
+
+This is required for future Databricks Apps deployment.
+
+Create an app.yaml file in the project root with a production startup command.
+
+Use this as the initial app.yaml unless there is a better Databricks-compatible structure:
+
+command: ["npm", "run", "start"]
+env:
+  - name: "NODE_ENV"
+    value: "production"
+5. Database Requirements
+
+Use a PostgreSQL-compatible schema.
+
+The app should use DATABASE_URL for database connection configuration.
+
+Also support future Databricks/Lakebase-style configuration by keeping database connection logic isolated in:
+
+src/server/db/
+
+Create SQL migration files and a full db/schema.sql.
+
+Create seed data scripts for:
+
+Risk triggers
+Request statuses
+Meeting types
+Business line categories
+Next-action options
+Placeholder email templates
+Placeholder static attendee rules
+
+Do not depend on a Replit-only database product.
+
+6. Core Data Model
+
+Create database tables for the following.
+
+risk_review_requests
+
+Stores the main request/opportunity record.
+
+Fields:
+
+id
+created_at
+updated_at
+requester_name
+requester_email
+client_name
+project_name
+crm_opportunity_number
+bmcd_contract_value_raw
+bmcd_contract_value_numeric
+total_installed_cost_raw
+total_installed_cost_numeric
+business_lines
+business_line_classification
+is_epc_prime
+is_major_opportunity
+request_type
+risk_identification_status
+pre_risk_target_date
+formal_risk_target_date
+proposal_due_date
+formal_risk_discussion_date
+final_risk_target_date
+pre_risk_lead
+formal_risk_lead
+status
+next_action
+owner
+notes
+risk_triggers
+
+Master list of risk triggers.
+
+Fields:
+
+id
+trigger_number
+trigger_name
+trigger_description
+is_major_opportunity_trigger
+active
+request_risk_triggers
+
+Join table between requests and risk triggers.
+
+Fields:
+
+id
+request_id
+risk_trigger_id
+attendees
+
+People associated with a request.
+
+Fields:
+
+id
+request_id
+name
+email
+role
+attendee_type
+source
+is_required
+
+Roles should include:
+
+Business-Line Director
+Business Line CDB Operations Manager
+Project Manager
+Engineering Manager
+Construction Manager
+Self-Perform PM
+Biz Develop/Capture Manager
+Executive-in-Charge
+Attorney
+Regional GP Manager
+Regional Risk Manager
+Other Attendee
+Static Executive Attendee
+Risk Admin
+Risk Lead
+meetings
+
+Each request can have multiple meetings.
+
+Fields:
+
+id
+request_id
+meeting_type
+target_date
+scheduled_start
+scheduled_end
+timezone
+subject
+body
+teams_link
+outlook_event_id
+status
+risk_lead
+rescheduled_count
+notes
+
+Meeting types:
+
+Pre-Risk Consult
+Pre-Risk Review
+Formal Risk Discussion
+Final Risk Review
+email_templates
+
+Reusable email templates.
+
+Fields:
+
+id
+template_name
+template_type
+applies_to_major
+applies_to_business_line
+applies_to_request_type
+subject_template
+body_template
+active
+email_drafts
+
+Generated editable email drafts.
+
+Fields:
+
+id
+request_id
+meeting_id
+template_id
+to_recipients
+cc_recipients
+subject
+body
+status
+created_at
+updated_at
+sent_at
+rule_sets
+
+Configurable business rules.
+
+Fields:
+
+id
+name
+condition_json
+output_json
+priority
+active
+status_history
+
+Tracks status changes.
+
+Fields:
+
+id
+request_id
+previous_status
+new_status
+changed_by
+changed_at
+notes
+notes
+
+General notes.
+
+Fields:
+
+id
+request_id
+note_text
+created_by
+created_at
+audit_events
+
+Audit trail.
+
+Fields:
+
+id
+entity_type
+entity_id
+event_type
+event_json
+created_by
+created_at
+imported_tracker_rows
+
+For future Excel tracker import traceability.
+
+Fields:
+
+id
+source_file_name
+source_sheet_name
+source_row_number
+raw_json
+mapped_request_id
+imported_at
+
+---
+
+# 7. Risk Triggers Seed Data
+
+Seed these 20 risk triggers.
+
+Mark triggers 1 and 2 as `is_major_opportunity_trigger = true`.
+
+1. Client project delivery method is Design-Build or EPC
+2. Client project delivery method is Design-Bid-Build with TIC greater than $50M
+3. Project depends on new/untested technology
+4. Professional Services contract requires process or performance guarantee
+5. New business line or market
+6. Replacing existing contractor or consultant
+7. Scope includes work on residential property
+8. Scope includes review/inspection of third-party work
+9. Project includes speculative development
+10. Project performed through a Joint Venture or Consortium
+11. Project location outside the US 50 states
+12. Scope includes construction of third-party design
+13. Project located where BMEC is not licensed to work
+14. Requires new legal entity or business unit
+15. Creates conflict of interest with existing client
+16. Services performed with no Limitation of Liability
+17. Project purchasing materials or equipment under a Professional Services Agreement or Master Services Agreement
+18. Project involves digital consulting or services
+19. Project funding is Federal grant or tax credit
+20. Limited or specific AI Use
+
+---
+
+# 8. Business Rules
+
+Create a backend rules service in:
+
+```text
+src/server/rules/
+
+Do not put these rules directly in React components.
+
+Major Opportunity Rule
+
+A request is Major if the selected risk triggers include either:
+
+Trigger 1
+Trigger 2
+
+Otherwise it is Non-Major.
+
+Business Line Classification
+
+The request form allows multiple business lines.
+
+Supported business lines:
+
+BESS
+Decarbonization
+GHI
+Nuclear
+Solar
+Mining
+
+Classification logic:
+
+If BESS and Solar are both selected, classify as BESS + Solar.
+If BESS is selected and Solar is not selected, classify as BESS.
+If Solar is selected and BESS is not selected, classify as Solar.
+If GHI is selected and neither BESS nor Solar is selected, classify as GHI.
+Otherwise classify as Other.
+EPC Prime Rule
+
+If is_epc_prime = true, collect and display the EPC-prime attendee roles, including:
+
+Business-Line Director
+Business Line CDB Operations Manager
+Project Manager
+Engineering Manager
+Construction Manager
+Self-Perform PM
+Biz Develop/Capture Manager
+Executive-in-Charge
+Contract Review Request RVW #
+Attorney
+Regional GP Manager
+Regional Risk Manager
+Other Attendees
+
+If is_epc_prime = false, collect and display the standard attendee roles.
+
+Validation Warnings
+
+On the request detail page, show warnings when:
+
+Attorney is missing.
+Contract Review Request RVW # is missing.
+Formal Risk is requested but legal information is incomplete.
+Final Risk is requested but Formal Risk Discussion Date is missing.
+Risk Identification Meeting status is No or blank.
+Pre-Risk target date is after Formal Risk target date.
+Proposal due date is before Formal Risk target date.
+Required attendees are missing.
+Request has no risk triggers selected.
+Request has no business line selected.
+
+Warnings should not block saving in the MVP. They should be visible to the coordinator.
+
+9. App Screens
+
+Build these screens.
+
+9.1 Dashboard
+
+Route:
+
+/
+
+Show all risk review requests in a table.
+
+Columns:
+
+Project Name
+Client Name
+CRM Opportunity Number
+Requester
+Business Line
+Major?
+EPC Prime?
+Request Type
+Risk Identification Status
+Pre-Risk Target Date
+Formal Risk Target Date
+Final Risk Target Date
+Current Status
+Next Action
+Owner
+Last Updated
+
+Filters:
+
+Status
+Business Line
+Major vs Non-Major
+EPC Prime
+Request Type
+Year
+Owner
+Risk Lead
+
+Dashboard should include summary cards:
+
+New Requests
+Ready to Schedule
+Pre-Risk Scheduled
+Formal Risk Scheduled
+Final Risk Scheduled
+Missing Info
+Completed
+9.2 New Request Form
+
+Route:
+
+/requests/new
+
+Capture the following fields:
+
+Project information:
+
+Requester name
+Requester email
+Client Name
+Project Name
+CRM Opportunity Number
+Risk Triggers
+BMcD Projected Contract Value
+Total Installed Cost
+Business Line
+Is BMcD prime EPC Contractor?
+
+Required attendees:
+
+Business-Line Director
+Business Line CDB Operations Manager
+Project Manager
+Engineering Manager
+Construction Manager
+Self-Perform PM
+Biz Develop/Capture Manager
+Executive-in-Charge
+Contract Review Request RVW #
+Attorney
+Regional GP Manager
+Regional Risk Manager
+Other Attendees
+
+Scheduling:
+
+What do you need to schedule?
+Has a Risk Identification Meeting occurred?
+Pre-Risk Review Target Date
+Formal Risk Discussion Target Date
+Proposal Due Date
+Formal Risk Discussion Date
+Pre-Risk Review Lead
+Formal Risk Discussion Risk Lead
+Final Risk Review Target Date
+Other Comments
+
+Request type options:
+
+Pre-Risk & Formal Risk Discussion
+Final Risk Review
+
+Risk Identification Meeting status options:
+
+Yes
+No
+Scheduled
+Other
+9.3 Request Detail Page
+
+Route:
+
+/requests/:id
+
+Show:
+
+Project summary
+Requester
+Risk triggers
+Major/Non-Major classification
+Business line classification
+EPC prime status
+Attendees grouped by role
+Meetings
+Email drafts
+Calendar invite previews
+Notes
+Status history
+Validation warnings
+Current status
+Next action
+
+Actions:
+
+Edit request
+Generate email drafts
+Generate calendar invite preview
+Add note
+Change status
+Add meeting
+Mark meeting complete
+Increment reschedule count
+9.4 Email Drafts
+
+On the request detail page or a dedicated route:
+
+/requests/:id/email-drafts
+
+Generate editable drafts for:
+
+Pre-Risk / Risk Review Request
+Formal Risk Request
+Final Risk Review Request
+Slides / Risk Register Reminder
+Follow-Up Reminder
+Reschedule Notice
+
+The draft should include:
+
+To recipients
+CC recipients
+Subject
+Body
+Template used
+Status
+
+Draft statuses:
+
+Draft
+Reviewed
+Ready to Send
+Sent Manually
+Cancelled
+
+Do not send real emails.
+
+9.5 Meeting Tracker
+
+Route:
+
+/meetings
+
+Show all meeting records.
+
+Columns:
+
+Project Name
+CRM Opportunity Number
+Meeting Type
+Target Date
+Scheduled Start
+Scheduled End
+Risk Lead
+Status
+Rescheduled Count
+Required Attendees
+Optional Attendees
+
+Meeting statuses:
+
+Not Started
+Needs Scheduling
+Scheduled
+Complete
+Rescheduled
+Cancelled
+On Hold
+9.6 Admin / Configuration
+
+Route:
+
+/admin
+
+Allow editing or at least viewing of:
+
+Risk triggers
+Email templates
+Business line rules
+Static attendee rules
+Status options
+Next-action options
+
+For the MVP, editing can be basic. The important thing is that these are not hidden inside code.
+
+10. Email Template Requirements
+
+Create a template rendering service in:
+
+src/server/templates/
+
+Use simple variable placeholders such as:
+
+{{projectName}}
+{{clientName}}
+{{crmOpportunityNumber}}
+{{riskTriggers}}
+{{bmcdContractValue}}
+{{totalInstalledCost}}
+{{businessLine}}
+{{requiredAttendees}}
+{{optionalAttendees}}
+{{preRiskTargetDate}}
+{{formalRiskTargetDate}}
+{{proposalDueDate}}
+{{riskLead}}
+{{otherComments}}
+
+Create default placeholder templates for:
+
+Pre-Risk / Risk Review Request
+
+Subject:
+
+Risk Review Request | {{clientName}} - {{projectName}} ({{crmOpportunityNumber}})
+
+Body should include:
+
+Project Name
+Client Name
+CRM Opportunity Number
+Risk Triggers
+BMcD Contract Value
+TIC
+Business Line
+Required Attendees
+Optional Attendees
+Risk Identification Meeting status
+Pre-Risk Target Date
+Formal Risk Target Date
+Proposal Due Date
+Other Comments
+Formal Risk Request
+
+Subject:
+
+Formal Risk Request | {{clientName}} - {{projectName}} ({{crmOpportunityNumber}})
+
+Body should include:
+
+Scheduling request language
+Project Name
+Client Name
+CRM Opportunity Number
+Risk Triggers
+BMcD Contract Value
+TIC
+Required Meeting Attendees
+Optional Meeting Attendees
+Pre-Risk Date placeholder
+Formal Risk Availability placeholder
+Final Risk Review Request
+
+Subject:
+
+Final Risk Review Request | {{clientName}} - {{projectName}} ({{crmOpportunityNumber}})
+
+Body should include:
+
+Formal Risk Discussion Date
+Pre-Risk Review Lead
+Formal Risk Discussion Risk Lead
+Final Risk Review Target Date
+Project details
+Required attendees
+Other Comments
+Slides / Risk Register Reminder
+
+Subject:
+
+Reminder: Slides and Risk Register Needed | {{projectName}}
+
+Body should remind attendees to submit slides and the risk register before the meeting.
+
+Reschedule Notice
+
+Subject:
+
+Reschedule Needed | {{projectName}} {{meetingType}}
+
+Body should include meeting type, original date, new target date, and notes.
+
+11. Calendar Invite Preview Requirements
+
+Create a calendar preview service.
+
+Do not create real Outlook calendar events yet.
+
+For each meeting, generate preview data:
+
+Subject
+Body
+Required attendees
+Optional attendees
+Start time
+End time
+Time zone
+Show as busy
+Response requested
+Reminder setting
+Teams link placeholder
+
+Pre-Risk calendar subject format:
+
+PWR Pre-Risk Review | {{clientName}} - {{projectName}} ({{crmOpportunityNumber}})
+
+Default meeting duration:
+
+60 minutes
+
+Default timezone:
+
+Central Time
+
+The preview body should include:
+
+Scheduling note placeholder
+Risk lead placeholder
+Reminder to submit slides and risk register at least 24 hours before the meeting
+Project Name
+CRM Opportunity Number
+Risk Triggers
+BMcD Contract Value
+TIC
+12. Status and Workflow Requirements
+
+Request statuses:
+
+New
+Needs Review
+Missing Info
+Ready to Schedule Pre-Risk
+Pre-Risk Scheduled
+Pre-Risk Complete
+Ready to Schedule Formal Risk
+Formal Risk Scheduled
+Formal Risk Complete
+Ready for Final Risk
+Final Risk Scheduled
+Final Risk Complete
+Cancelled
+On Hold
+
+Next action options:
+
+Review request
+Confirm attendees
+Confirm legal information
+Confirm risk lead
+Schedule pre-risk
+Send pre-risk invite manually
+Await slides/risk register
+Schedule formal risk
+Send formal risk invite manually
+Follow up with requester
+Schedule final risk
+Close request
+
+Changing status should create a status history record.
+
+13. Sample Data
+
+Seed a small set of fake/sample requests.
+
+Do not use real company names, real employee names, real emails, or real opportunity numbers.
+
+Use sample values like:
+
+Project Alpha
+Project Beta
+Example Client
+requester@example.com
+Placeholder Risk Lead
+Placeholder Attorney
+OPP-000001
+
+Include sample requests that cover:
+
+Major + BESS
+Major + Solar
+Major + BESS + Solar
+Major + GHI
+Non-Major + Other
+Final Risk Review request
+Missing legal information
+Missing Risk Identification Meeting
+14. Tracker Import Preparation
+
+Do not fully implement Excel import yet unless it is easy.
+
+But prepare for future import by creating:
+
+scripts/import-tracker.ts
+
+For now, this script can be a stub with comments.
+
+The future import should:
+
+Read each year tab from the tracker spreadsheet.
+Detect the header row.
+Map known columns.
+Normalize dates.
+Normalize opportunity numbers.
+Normalize business line.
+Normalize risk triggers.
+Create or update request records.
+Create meeting records.
+Store the original source row in imported_tracker_rows.
+
+Document this in:
+
+docs/data-model.md
+15. Outlook and Microsoft Graph Preparation
+
+Do not implement real Microsoft Graph calls.
+
+Create stubs only:
+
+src/server/integrations/outlook/
+  outlookClient.ts
+  calendarService.ts
+  emailService.ts
+
+These should export placeholder functions like:
+
+createEmailDraft
+createCalendarEvent
+findAvailableMeetingTimes
+createTeamsMeeting
+
+Each placeholder should throw a clear "Not implemented in MVP" error or return mock data.
+
+The UI should label these features as "Future Integration".
+
+16. Databricks Preparation
+
+Create:
+
+docs/databricks-deployment-notes.md
+
+Include notes that the app is designed for future Databricks Apps deployment.
+
+Mention:
+
+The app runs with npm run start.
+The server binds to 0.0.0.0.
+The server uses DATABRICKS_APP_PORT.
+app.yaml is included.
+Database connection is controlled by environment variables.
+Preferred future database target is Databricks Lakebase Postgres.
+Fallback future option is Unity Catalog tables for reporting/history.
+No secrets should be stored in code.
+
+Create .env.example with:
+
+NODE_ENV=development
+PORT=3000
+DATABRICKS_APP_PORT=
+DATABASE_URL=
+SESSION_SECRET=replace-me
+ENABLE_OUTLOOK_INTEGRATION=false
+ENABLE_DATABRICKS_INTEGRATION=false
+17. API Requirements
+
+Create REST API routes under:
+
+/api
+
+Required endpoints:
+
+Requests
+GET /api/requests
+GET /api/requests/:id
+POST /api/requests
+PUT /api/requests/:id
+DELETE /api/requests/:id
+Meetings
+GET /api/meetings
+GET /api/requests/:id/meetings
+POST /api/requests/:id/meetings
+PUT /api/meetings/:id
+Email Drafts
+GET /api/requests/:id/email-drafts
+POST /api/requests/:id/email-drafts/generate
+PUT /api/email-drafts/:id
+Rules
+POST /api/requests/:id/classify
+GET /api/risk-triggers
+GET /api/rule-sets
+Notes
+GET /api/requests/:id/notes
+POST /api/requests/:id/notes
+Status
+POST /api/requests/:id/status
+GET /api/requests/:id/status-history
+Calendar Preview
+POST /api/requests/:id/calendar-preview
+18. UI Style
+
+Make the UI clean and businesslike.
+
+Use:
+
+A simple left navigation
+Dashboard cards
+Tables with filters
+Detail pages with sections/cards
+Clear status badges
+Warning callouts
+Editable draft text areas
+Plain, readable design
+
+Do not over-design.
+
+The app is for a business coordinator managing a workflow, so prioritize clarity and speed over visual flash.
+
+19. Documentation Requirements
+
+Create a useful README.md with:
+
+Project overview
+Tech stack
+How to run in Replit
+How to run locally
+Environment variables
+Database setup
+Seed data instructions
+MVP limitations
+Future Databricks deployment notes
+Future Outlook integration notes
+
+Create docs:
+
+docs/product-requirements.md
+docs/data-model.md
+docs/rules-and-template-notes.md
+docs/databricks-deployment-notes.md
+
+These docs should reflect what was built.
+
+20. Implementation Instructions
+
+Build the app in this order:
+
+Create project structure.
+Configure TypeScript, Vite, Express, and package scripts.
+Create database schema and migrations.
+Create seed data.
+Build backend API routes.
+Build rules service.
+Build template rendering service.
+Build calendar preview service.
+Build React UI.
+Add dashboard.
+Add request form.
+Add request detail page.
+Add meeting tracker.
+Add email draft generation.
+Add admin/config page.
+Add docs.
+Verify npm run build and npm run start.
+
+When there is ambiguity, choose the simplest configurable approach and leave a clear TODO comment.
+
+Do not invent complex integrations yet.
+
+The MVP is successful when a user can:
+
+Create a risk review request.
+See it on the dashboard.
+Open the detail page.
+See major/non-major classification.
+See business line classification.
+See validation warnings.
+Track meetings.
+Generate editable email drafts.
+Generate calendar invite preview data.
+Change status and next action.
+Add notes.
+View seeded sample data.
+Run the app using npm run dev, npm run build, and npm run start.
+
+After Replit finishes the first build, use this as the second prompt:
+
+```markdown
+Now review the entire app for portability and Databricks readiness.
+
+Please do the following:
+
+1. Verify the app runs with:
+   - `npm run dev`
+   - `npm run build`
+   - `npm run start`
+
+2. Verify the Express server:
+   - uses `process.env.DATABRICKS_APP_PORT || process.env.PORT || 3000`
+   - binds to `0.0.0.0`
+   - serves the built React frontend in production
+
+3. Verify the repo includes:
+   - `app.yaml`
+   - `.env.example`
+   - `README.md`
+   - `docs/product-requirements.md`
+   - `docs/data-model.md`
+   - `docs/rules-and-template-notes.md`
+   - `docs/databricks-deployment-notes.md`
+   - `db/schema.sql`
+   - migration files
+   - seed scripts
+
+4. Verify the app does not depend on:
+   - Replit Database
+   - Firebase
+   - Supabase
+   - localStorage as the main data store
+   - hardcoded secrets
+   - real Outlook calls
+   - real Microsoft Graph calls
+
+5. Make sure all business rules are isolated in backend rule/template services, not buried inside React components.
+
+6. Make sure all email and calendar functions are preview/draft only.
+
+7. Add TODO comments for:
+   - Databricks Lakebase Postgres connection
+   - Outlook email draft creation
+   - Outlook calendar event creation
+   - Teams meeting creation
+   - availability lookup
+   - Excel tracker import
+
+8. Produce a final checklist in the README called:
+   `MVP Validation Checklist`
+
+Do not add real integrations yet. Keep this as a stable, portable MVP.
+
+I’d

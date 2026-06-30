@@ -1,0 +1,157 @@
+This plan is approved, but please revise the implementation with the following portability corrections before building.
+
+## 1. Package manager consistency
+
+Because this workspace is a pnpm monorepo, use pnpm consistently.
+
+Do not create or rely on `package-lock.json`.
+
+Use:
+
+- `pnpm-lock.yaml`
+- `pnpm-workspace.yaml`
+- root `package.json` scripts
+
+The root `package.json` must expose these commands:
+
+```bash
+pnpm run dev
+pnpm run build
+pnpm run start
+pnpm run db:migrate
+pnpm run db:seed
+
+Also make sure the equivalent npm-style commands still work if Replit expects them:
+
+npm run dev
+npm run build
+npm run start
+
+But internally, the repo should be pnpm-first.
+
+2. app.yaml must be pnpm-compatible
+
+Since this is a pnpm workspace, do not use this:
+
+command: ["npm", "run", "start"]
+
+Use a pnpm/corepack-compatible Databricks command instead:
+
+command: ["corepack", "pnpm", "run", "start"]
+
+Do not rely on Databricks guessing the start command.
+
+3. Be careful with NODE_ENV=production
+
+Do not set NODE_ENV=production in app.yaml unless all packages needed for build and runtime are listed in dependencies, not only devDependencies.
+
+For this MVP, either:
+
+Omit NODE_ENV from app.yaml, or
+Make sure Vite, TypeScript, Express runtime dependencies, build tools, and server startup tools are all available during Databricks deployment.
+
+Prefer the safest MVP option: keep app.yaml minimal:
+
+command: ["corepack", "pnpm", "run", "start"]
+4. Production server requirement
+
+The production Express server must serve the built React frontend.
+
+The Databricks production runtime should only need one command:
+
+pnpm run start
+
+That command should:
+
+Start the Express API server.
+Serve the built frontend assets.
+Listen on the correct port.
+Bind to 0.0.0.0.
+
+Do not require a separate Vite dev server in production.
+
+5. Port binding
+
+In the Express server, use this pattern:
+
+const port = Number(process.env.DATABRICKS_APP_PORT || process.env.PORT || 3000);
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`PWR Risk Review Coordinator running on port ${port}`);
+});
+6. Replit database vs. Replit Database
+
+Using a provisioned PostgreSQL database in Replit is acceptable for development.
+
+Do not use Replit Database.
+
+The database connection must go through DATABASE_URL and remain isolated in the backend database layer.
+
+7. Keep the monorepo portable
+
+The monorepo structure is acceptable, but the root repo must remain deployable as a Databricks App.
+
+That means the root must contain:
+
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+app.yaml
+.env.example
+README.md
+docs/
+db/schema.sql
+db/migrations/
+
+The Databricks deployment instructions should explain exactly which root command starts the app.
+
+8. OpenAPI/codegen is okay, but do not let it block MVP
+
+The OpenAPI + generated typed client approach is acceptable.
+
+However, if OpenAPI/codegen slows implementation or becomes fragile, prioritize a working MVP with clean backend API routes and a simple typed frontend API client.
+
+Do not spend excessive time debugging codegen during the MVP.
+
+9. Keep integrations stubbed
+
+Do not implement real Outlook, Microsoft Graph, Teams, email sending, calendar sending, or availability lookup.
+
+All of those should remain stubs or preview-only services.
+
+10. Build validation
+
+At the end, verify and document:
+
+pnpm run build
+pnpm run start
+
+Also verify:
+
+the app serves the frontend in production
+/api/health works
+dashboard loads sample requests
+new request creation works
+classification works
+email drafts are generated
+calendar preview is generated
+status changes write status history
+notes can be added
+no real external integrations are called
+
+Proceed with implementation after applying these corrections.
+
+
+After that, I’d approve the build.
+
+The Replit plan itself is good. The parts I especially like are:
+
+- It recognized the workspace is a pnpm monorepo instead of forcing the exact folder structure from my first prompt.
+- It kept business logic out of React.
+- It planned OpenAPI/typed client codegen, which is nice if it works smoothly.
+- It planned Drizzle/PostgreSQL, which keeps the future Lakebase/Postgres option open.
+- It kept Outlook, Graph, Teams, and Databricks as stubs.
+- It included the tracker import stub instead of trying to solve that too early.
+- It included docs and validation checklists.
+
+The only thing I would **not** let slide is the `app.yaml` / pnpm / production-start-command issue. Fix that now, and this is a good starting plan.
