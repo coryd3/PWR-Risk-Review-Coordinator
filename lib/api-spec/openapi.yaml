@@ -3,13 +3,31 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: PWR Risk Review Coordinator API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: requests
+    description: Risk review requests
+  - name: meetings
+    description: Meetings
+  - name: email-drafts
+    description: Email drafts
+  - name: rules
+    description: Rules and classification
+  - name: notes
+    description: Notes
+  - name: status
+    description: Status workflow
+  - name: calendar
+    description: Calendar previews
+  - name: dashboard
+    description: Dashboard summaries
+  - name: config
+    description: Configuration and admin
 paths:
   /healthz:
     get:
@@ -24,7 +42,439 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /requests:
+    get:
+      operationId: listRequests
+      tags: [requests]
+      summary: List all risk review requests
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskReviewRequest"
+    post:
+      operationId: createRequest
+      tags: [requests]
+      summary: Create a risk review request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskReviewRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskReviewRequestDetail"
+
+  /requests/{id}:
+    get:
+      operationId: getRequest
+      tags: [requests]
+      summary: Get a request with full detail
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskReviewRequestDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateRequest
+      tags: [requests]
+      summary: Update a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskReviewRequestUpdate"
+      responses:
+        "200":
+          description: Updated request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskReviewRequestDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteRequest
+      tags: [requests]
+      summary: Delete a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /requests/{id}/classify:
+    post:
+      operationId: classifyRequest
+      tags: [rules]
+      summary: Re-run classification and validation for a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Classification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassificationResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /requests/{id}/meetings:
+    get:
+      operationId: listRequestMeetings
+      tags: [meetings]
+      summary: List meetings for a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Add a meeting to a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Created meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List all meetings
+      responses:
+        "200":
+          description: Meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeetingWithRequest"
+
+  /meetings/{id}:
+    put:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update a meeting
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingUpdate"
+      responses:
+        "200":
+          description: Updated meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /requests/{id}/email-drafts:
+    get:
+      operationId: listEmailDrafts
+      tags: [email-drafts]
+      summary: List email drafts for a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Email drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailDraft"
+
+  /requests/{id}/email-drafts/generate:
+    post:
+      operationId: generateEmailDrafts
+      tags: [email-drafts]
+      summary: Generate editable email drafts for a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateDraftsInput"
+      responses:
+        "201":
+          description: Generated drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailDraft"
+
+  /email-drafts/{id}:
+    put:
+      operationId: updateEmailDraft
+      tags: [email-drafts]
+      summary: Update an email draft
+      parameters:
+        - $ref: "#/components/parameters/EmailDraftId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailDraftUpdate"
+      responses:
+        "200":
+          description: Updated draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailDraft"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /requests/{id}/notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List notes for a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Add a note to a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /requests/{id}/status:
+    post:
+      operationId: changeStatus
+      tags: [status]
+      summary: Change request status and record history
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusChangeInput"
+      responses:
+        "200":
+          description: Updated request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskReviewRequestDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /requests/{id}/status-history:
+    get:
+      operationId: listStatusHistory
+      tags: [status]
+      summary: List status history for a request
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Status history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusHistoryEntry"
+
+  /requests/{id}/calendar-preview:
+    post:
+      operationId: generateCalendarPreview
+      tags: [calendar]
+      summary: Generate calendar invite preview data (no real event created)
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalendarPreviewInput"
+      responses:
+        "200":
+          description: Calendar preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarPreview"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /risk-triggers:
+    get:
+      operationId: listRiskTriggers
+      tags: [rules]
+      summary: List master risk triggers
+      responses:
+        "200":
+          description: Risk triggers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskTrigger"
+
+  /rule-sets:
+    get:
+      operationId: listRuleSets
+      tags: [rules]
+      summary: List configurable rule sets
+      responses:
+        "200":
+          description: Rule sets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RuleSet"
+
+  /email-templates:
+    get:
+      operationId: listEmailTemplates
+      tags: [config]
+      summary: List email templates
+      responses:
+        "200":
+          description: Email templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailTemplate"
+
+  /config:
+    get:
+      operationId: getConfig
+      tags: [config]
+      summary: Get configuration options (enums and static rules)
+      responses:
+        "200":
+          description: Configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppConfig"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary card counts
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
+  parameters:
+    RequestId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    MeetingId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    EmailDraftId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +483,833 @@ components:
           type: string
       required:
         - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
 
+    RiskTrigger:
+      type: object
+      required:
+        - id
+        - triggerNumber
+        - triggerName
+        - isMajorOpportunityTrigger
+        - active
+      properties:
+        id:
+          type: integer
+        triggerNumber:
+          type: integer
+        triggerName:
+          type: string
+        triggerDescription:
+          type: ["string", "null"]
+        isMajorOpportunityTrigger:
+          type: boolean
+        active:
+          type: boolean
+
+    Attendee:
+      type: object
+      required:
+        - id
+        - requestId
+        - role
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        role:
+          type: string
+        attendeeType:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        isRequired:
+          type: boolean
+
+    AttendeeInput:
+      type: object
+      required:
+        - role
+      properties:
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        role:
+          type: string
+        attendeeType:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        isRequired:
+          type: boolean
+
+    Meeting:
+      type: object
+      required:
+        - id
+        - requestId
+        - meetingType
+        - status
+        - rescheduledCount
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        meetingType:
+          type: string
+        targetDate:
+          type: ["string", "null"]
+        scheduledStart:
+          type: ["string", "null"]
+        scheduledEnd:
+          type: ["string", "null"]
+        timezone:
+          type: ["string", "null"]
+        subject:
+          type: ["string", "null"]
+        body:
+          type: ["string", "null"]
+        teamsLink:
+          type: ["string", "null"]
+        outlookEventId:
+          type: ["string", "null"]
+        status:
+          type: string
+        riskLead:
+          type: ["string", "null"]
+        rescheduledCount:
+          type: integer
+        notes:
+          type: ["string", "null"]
+
+    MeetingWithRequest:
+      type: object
+      required:
+        - id
+        - requestId
+        - meetingType
+        - status
+        - rescheduledCount
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        meetingType:
+          type: string
+        targetDate:
+          type: ["string", "null"]
+        scheduledStart:
+          type: ["string", "null"]
+        scheduledEnd:
+          type: ["string", "null"]
+        timezone:
+          type: ["string", "null"]
+        subject:
+          type: ["string", "null"]
+        body:
+          type: ["string", "null"]
+        teamsLink:
+          type: ["string", "null"]
+        outlookEventId:
+          type: ["string", "null"]
+        status:
+          type: string
+        riskLead:
+          type: ["string", "null"]
+        rescheduledCount:
+          type: integer
+        notes:
+          type: ["string", "null"]
+        projectName:
+          type: ["string", "null"]
+        clientName:
+          type: ["string", "null"]
+        crmOpportunityNumber:
+          type: ["string", "null"]
+        requiredAttendees:
+          type: array
+          items:
+            type: string
+        optionalAttendees:
+          type: array
+          items:
+            type: string
+
+    MeetingInput:
+      type: object
+      required:
+        - meetingType
+      properties:
+        meetingType:
+          type: string
+        targetDate:
+          type: ["string", "null"]
+        scheduledStart:
+          type: ["string", "null"]
+        scheduledEnd:
+          type: ["string", "null"]
+        timezone:
+          type: ["string", "null"]
+        subject:
+          type: ["string", "null"]
+        body:
+          type: ["string", "null"]
+        teamsLink:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        riskLead:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    MeetingUpdate:
+      type: object
+      properties:
+        meetingType:
+          type: string
+        targetDate:
+          type: ["string", "null"]
+        scheduledStart:
+          type: ["string", "null"]
+        scheduledEnd:
+          type: ["string", "null"]
+        timezone:
+          type: ["string", "null"]
+        subject:
+          type: ["string", "null"]
+        body:
+          type: ["string", "null"]
+        teamsLink:
+          type: ["string", "null"]
+        status:
+          type: string
+        riskLead:
+          type: ["string", "null"]
+        rescheduledCount:
+          type: integer
+        notes:
+          type: ["string", "null"]
+
+    EmailTemplate:
+      type: object
+      required:
+        - id
+        - templateName
+        - templateType
+        - subjectTemplate
+        - bodyTemplate
+        - active
+      properties:
+        id:
+          type: integer
+        templateName:
+          type: string
+        templateType:
+          type: string
+        appliesToMajor:
+          type: ["boolean", "null"]
+        appliesToBusinessLine:
+          type: ["string", "null"]
+        appliesToRequestType:
+          type: ["string", "null"]
+        subjectTemplate:
+          type: string
+        bodyTemplate:
+          type: string
+        active:
+          type: boolean
+
+    EmailDraft:
+      type: object
+      required:
+        - id
+        - requestId
+        - subject
+        - body
+        - status
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        meetingId:
+          type: ["integer", "null"]
+        templateId:
+          type: ["integer", "null"]
+        templateType:
+          type: ["string", "null"]
+        toRecipients:
+          type: string
+        ccRecipients:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: ["string", "null"]
+        updatedAt:
+          type: ["string", "null"]
+        sentAt:
+          type: ["string", "null"]
+
+    EmailDraftUpdate:
+      type: object
+      properties:
+        toRecipients:
+          type: string
+        ccRecipients:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+
+    GenerateDraftsInput:
+      type: object
+      properties:
+        templateTypes:
+          type: array
+          items:
+            type: string
+        meetingId:
+          type: ["integer", "null"]
+
+    RuleSet:
+      type: object
+      required:
+        - id
+        - name
+        - priority
+        - active
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        conditionJson:
+          type: ["string", "null"]
+        outputJson:
+          type: ["string", "null"]
+        priority:
+          type: integer
+        active:
+          type: boolean
+
+    StatusHistoryEntry:
+      type: object
+      required:
+        - id
+        - requestId
+        - newStatus
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        previousStatus:
+          type: ["string", "null"]
+        newStatus:
+          type: string
+        changedBy:
+          type: ["string", "null"]
+        changedAt:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    Note:
+      type: object
+      required:
+        - id
+        - requestId
+        - noteText
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        noteText:
+          type: string
+        createdBy:
+          type: ["string", "null"]
+        createdAt:
+          type: ["string", "null"]
+
+    NoteInput:
+      type: object
+      required:
+        - noteText
+      properties:
+        noteText:
+          type: string
+        createdBy:
+          type: ["string", "null"]
+
+    ValidationWarning:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    ClassificationResult:
+      type: object
+      required:
+        - isMajorOpportunity
+        - businessLineClassification
+        - warnings
+      properties:
+        isMajorOpportunity:
+          type: boolean
+        businessLineClassification:
+          type: string
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationWarning"
+
+    RiskReviewRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        createdAt:
+          type: ["string", "null"]
+        updatedAt:
+          type: ["string", "null"]
+        requesterName:
+          type: ["string", "null"]
+        requesterEmail:
+          type: ["string", "null"]
+        clientName:
+          type: ["string", "null"]
+        projectName:
+          type: ["string", "null"]
+        crmOpportunityNumber:
+          type: ["string", "null"]
+        bmcdContractValueRaw:
+          type: ["string", "null"]
+        bmcdContractValueNumeric:
+          type: ["number", "null"]
+        totalInstalledCostRaw:
+          type: ["string", "null"]
+        totalInstalledCostNumeric:
+          type: ["number", "null"]
+        businessLines:
+          type: array
+          items:
+            type: string
+        businessLineClassification:
+          type: ["string", "null"]
+        contractReviewRvwNumber:
+          type: ["string", "null"]
+        isEpcPrime:
+          type: boolean
+        isMajorOpportunity:
+          type: boolean
+        requestType:
+          type: ["string", "null"]
+        riskIdentificationStatus:
+          type: ["string", "null"]
+        preRiskTargetDate:
+          type: ["string", "null"]
+        formalRiskTargetDate:
+          type: ["string", "null"]
+        proposalDueDate:
+          type: ["string", "null"]
+        formalRiskDiscussionDate:
+          type: ["string", "null"]
+        finalRiskTargetDate:
+          type: ["string", "null"]
+        preRiskLead:
+          type: ["string", "null"]
+        formalRiskLead:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        nextAction:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    RiskReviewRequestDetail:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        createdAt:
+          type: ["string", "null"]
+        updatedAt:
+          type: ["string", "null"]
+        requesterName:
+          type: ["string", "null"]
+        requesterEmail:
+          type: ["string", "null"]
+        clientName:
+          type: ["string", "null"]
+        projectName:
+          type: ["string", "null"]
+        crmOpportunityNumber:
+          type: ["string", "null"]
+        bmcdContractValueRaw:
+          type: ["string", "null"]
+        bmcdContractValueNumeric:
+          type: ["number", "null"]
+        totalInstalledCostRaw:
+          type: ["string", "null"]
+        totalInstalledCostNumeric:
+          type: ["number", "null"]
+        businessLines:
+          type: array
+          items:
+            type: string
+        businessLineClassification:
+          type: ["string", "null"]
+        contractReviewRvwNumber:
+          type: ["string", "null"]
+        isEpcPrime:
+          type: boolean
+        isMajorOpportunity:
+          type: boolean
+        requestType:
+          type: ["string", "null"]
+        riskIdentificationStatus:
+          type: ["string", "null"]
+        preRiskTargetDate:
+          type: ["string", "null"]
+        formalRiskTargetDate:
+          type: ["string", "null"]
+        proposalDueDate:
+          type: ["string", "null"]
+        formalRiskDiscussionDate:
+          type: ["string", "null"]
+        finalRiskTargetDate:
+          type: ["string", "null"]
+        preRiskLead:
+          type: ["string", "null"]
+        formalRiskLead:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        nextAction:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        triggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskTrigger"
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attendee"
+        meetings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Meeting"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationWarning"
+
+    RiskReviewRequestInput:
+      type: object
+      properties:
+        requesterName:
+          type: ["string", "null"]
+        requesterEmail:
+          type: ["string", "null"]
+        clientName:
+          type: ["string", "null"]
+        projectName:
+          type: ["string", "null"]
+        crmOpportunityNumber:
+          type: ["string", "null"]
+        bmcdContractValueRaw:
+          type: ["string", "null"]
+        totalInstalledCostRaw:
+          type: ["string", "null"]
+        businessLines:
+          type: array
+          items:
+            type: string
+        contractReviewRvwNumber:
+          type: ["string", "null"]
+        isEpcPrime:
+          type: boolean
+        requestType:
+          type: ["string", "null"]
+        riskIdentificationStatus:
+          type: ["string", "null"]
+        preRiskTargetDate:
+          type: ["string", "null"]
+        formalRiskTargetDate:
+          type: ["string", "null"]
+        proposalDueDate:
+          type: ["string", "null"]
+        formalRiskDiscussionDate:
+          type: ["string", "null"]
+        finalRiskTargetDate:
+          type: ["string", "null"]
+        preRiskLead:
+          type: ["string", "null"]
+        formalRiskLead:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        nextAction:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        triggerIds:
+          type: array
+          items:
+            type: integer
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendeeInput"
+
+    RiskReviewRequestUpdate:
+      type: object
+      properties:
+        requesterName:
+          type: ["string", "null"]
+        requesterEmail:
+          type: ["string", "null"]
+        clientName:
+          type: ["string", "null"]
+        projectName:
+          type: ["string", "null"]
+        crmOpportunityNumber:
+          type: ["string", "null"]
+        bmcdContractValueRaw:
+          type: ["string", "null"]
+        totalInstalledCostRaw:
+          type: ["string", "null"]
+        businessLines:
+          type: array
+          items:
+            type: string
+        contractReviewRvwNumber:
+          type: ["string", "null"]
+        isEpcPrime:
+          type: boolean
+        requestType:
+          type: ["string", "null"]
+        riskIdentificationStatus:
+          type: ["string", "null"]
+        preRiskTargetDate:
+          type: ["string", "null"]
+        formalRiskTargetDate:
+          type: ["string", "null"]
+        proposalDueDate:
+          type: ["string", "null"]
+        formalRiskDiscussionDate:
+          type: ["string", "null"]
+        finalRiskTargetDate:
+          type: ["string", "null"]
+        preRiskLead:
+          type: ["string", "null"]
+        formalRiskLead:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        nextAction:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        triggerIds:
+          type: array
+          items:
+            type: integer
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendeeInput"
+
+    StatusChangeInput:
+      type: object
+      required:
+        - newStatus
+      properties:
+        newStatus:
+          type: string
+        nextAction:
+          type: ["string", "null"]
+        changedBy:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    CalendarPreviewInput:
+      type: object
+      properties:
+        meetingId:
+          type: ["integer", "null"]
+        meetingType:
+          type: ["string", "null"]
+
+    CalendarPreview:
+      type: object
+      required:
+        - subject
+        - body
+        - timezone
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        requiredAttendees:
+          type: array
+          items:
+            type: string
+        optionalAttendees:
+          type: array
+          items:
+            type: string
+        start:
+          type: ["string", "null"]
+        end:
+          type: ["string", "null"]
+        timezone:
+          type: string
+        showAs:
+          type: string
+        responseRequested:
+          type: boolean
+        reminderMinutes:
+          type: integer
+        teamsLink:
+          type: string
+
+    AppConfig:
+      type: object
+      required:
+        - statuses
+        - nextActions
+        - businessLines
+        - meetingTypes
+        - meetingStatuses
+        - attendeeRoles
+        - epcPrimeRoles
+        - standardRoles
+        - requestTypes
+        - riskIdentificationStatuses
+        - draftStatuses
+        - templateTypes
+      properties:
+        statuses:
+          type: array
+          items:
+            type: string
+        nextActions:
+          type: array
+          items:
+            type: string
+        businessLines:
+          type: array
+          items:
+            type: string
+        meetingTypes:
+          type: array
+          items:
+            type: string
+        meetingStatuses:
+          type: array
+          items:
+            type: string
+        attendeeRoles:
+          type: array
+          items:
+            type: string
+        epcPrimeRoles:
+          type: array
+          items:
+            type: string
+        standardRoles:
+          type: array
+          items:
+            type: string
+        requestTypes:
+          type: array
+          items:
+            type: string
+        riskIdentificationStatuses:
+          type: array
+          items:
+            type: string
+        draftStatuses:
+          type: array
+          items:
+            type: string
+        templateTypes:
+          type: array
+          items:
+            type: string
+
+    DashboardSummary:
+      type: object
+      required:
+        - newRequests
+        - readyToSchedule
+        - preRiskScheduled
+        - formalRiskScheduled
+        - finalRiskScheduled
+        - missingInfo
+        - completed
+        - total
+      properties:
+        newRequests:
+          type: integer
+        readyToSchedule:
+          type: integer
+        preRiskScheduled:
+          type: integer
+        formalRiskScheduled:
+          type: integer
+        finalRiskScheduled:
+          type: integer
+        missingInfo:
+          type: integer
+        completed:
+          type: integer
+        total:
+          type: integer

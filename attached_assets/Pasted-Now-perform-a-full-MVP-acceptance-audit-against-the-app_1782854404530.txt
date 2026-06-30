@@ -1,0 +1,132 @@
+Now perform a full MVP acceptance audit against the approved plan.
+
+Do not add new features. First inspect the codebase and run the app.
+
+Verify each item below and produce a pass/fail table. For every failed item, fix it and re-run the relevant test.
+
+## Runtime checks
+
+1. `pnpm run build` succeeds.
+2. `pnpm run start` starts the production server.
+3. The production server serves the built React frontend.
+4. The Express server binds to `0.0.0.0`.
+5. The Express server uses `process.env.DATABRICKS_APP_PORT || process.env.PORT || 3000`.
+6. `/api/health` works.
+7. Root `app.yaml` exists and contains:
+   `command: ["corepack", "pnpm", "run", "start"]`.
+8. No `package-lock.json` is created or required.
+
+## Database checks
+
+1. The app uses PostgreSQL through `DATABASE_URL`.
+2. No Replit Database key-value store is used.
+3. Drizzle schema exists.
+4. `db/schema.sql` exists.
+5. `db/migrations/` exists.
+6. Seed scripts exist.
+7. Seed data includes all 20 risk triggers.
+8. Risk triggers 1 and 2 are marked as major-opportunity triggers.
+9. Sample requests are saved in the database, not hardcoded in React.
+10. Creating a new request persists it to the database.
+11. Refreshing the page does not lose saved requests.
+
+## API checks
+
+Verify these endpoints exist and work:
+
+- GET `/api/requests`
+- GET `/api/requests/:id`
+- POST `/api/requests`
+- PUT `/api/requests/:id`
+- DELETE `/api/requests/:id`
+- GET `/api/meetings`
+- GET `/api/requests/:id/meetings`
+- POST `/api/requests/:id/meetings`
+- PUT `/api/meetings/:id`
+- GET `/api/requests/:id/email-drafts`
+- POST `/api/requests/:id/email-drafts/generate`
+- PUT `/api/email-drafts/:id`
+- POST `/api/requests/:id/classify`
+- GET `/api/risk-triggers`
+- GET `/api/rule-sets`
+- GET `/api/requests/:id/notes`
+- POST `/api/requests/:id/notes`
+- POST `/api/requests/:id/status`
+- GET `/api/requests/:id/status-history`
+- POST `/api/requests/:id/calendar-preview`
+
+## Business rule checks
+
+1. A request with risk trigger 1 is classified as Major.
+2. A request with risk trigger 2 is classified as Major.
+3. A request without triggers 1 or 2 is classified as Non-Major.
+4. BESS + Solar classifies as `BESS + Solar`.
+5. BESS only classifies as `BESS`.
+6. Solar only classifies as `Solar`.
+7. GHI with neither BESS nor Solar classifies as `GHI`.
+8. All other business-line combinations classify as `Other`.
+9. Business rules live in backend services, not React components.
+
+## Validation warning checks
+
+Confirm warnings appear but do not block saving when:
+
+1. Attorney is missing.
+2. Contract Review Request RVW # is missing.
+3. Formal Risk is requested but legal information is incomplete.
+4. Final Risk is requested but Formal Risk Discussion Date is missing.
+5. Risk Identification Meeting status is No or blank.
+6. Pre-Risk target date is after Formal Risk target date.
+7. Proposal due date is before Formal Risk target date.
+8. Required attendees are missing.
+9. No risk triggers are selected.
+10. No business line is selected.
+
+## UI checks
+
+1. Dashboard loads.
+2. Dashboard summary cards show counts.
+3. Dashboard table shows sample requests.
+4. Dashboard filters work.
+5. New Request form saves a request.
+6. Request Detail page loads a saved request.
+7. Request Detail page shows classification.
+8. Request Detail page shows validation warnings.
+9. Request Detail page shows attendees grouped by role.
+10. Request Detail page shows meetings.
+11. Request Detail page shows notes.
+12. Request Detail page shows status history.
+13. Email draft generation works.
+14. Calendar preview generation works.
+15. Meeting Tracker page works.
+16. Admin/Config page works.
+
+## Integration safety checks
+
+1. No real email is sent.
+2. No real Outlook event is created.
+3. No real Microsoft Graph call is made.
+4. No real Teams meeting is created.
+5. Outlook integration files are stubs only.
+6. Databricks integration files are stubs only.
+7. UI clearly labels future integration features.
+
+## Documentation checks
+
+Confirm these files exist and are accurate:
+
+- `README.md`
+- `docs/product-requirements.md`
+- `docs/data-model.md`
+- `docs/rules-and-template-notes.md`
+- `docs/databricks-deployment-notes.md`
+- `.env.example`
+- `scripts/import-tracker.ts`
+
+The README must include an `MVP Validation Checklist`.
+
+After fixing failures, summarize:
+1. What passed.
+2. What was fixed.
+3. What remains intentionally out of scope.
+4. Any risks before Databricks deployment.

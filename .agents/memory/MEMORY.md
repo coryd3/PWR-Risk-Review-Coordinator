@@ -1,0 +1,1 @@
+- [TS project references need rebuild](ts-project-references.md) — after editing a referenced composite lib (lib/db, lib/api-zod), rebuild its declarations or consumers see "no exported member".
