@@ -166,43 +166,52 @@ router.put("/requests/:id", async (req: Request, res: Response): Promise<void> =
     res.status(404).json({ message: "Request not found" });
     return;
   }
-  const body = UpdateRequestBody.parse(req.body);
-  await db
-    .update(riskReviewRequestsTable)
-    .set({
-      requesterName: body.requesterName ?? null,
-      requesterEmail: body.requesterEmail ?? null,
-      clientName: body.clientName ?? null,
-      projectName: body.projectName ?? null,
-      crmOpportunityNumber: body.crmOpportunityNumber ?? null,
-      bmcdContractValueRaw: body.bmcdContractValueRaw ?? null,
-      bmcdContractValueNumeric: parseMoney(body.bmcdContractValueRaw),
-      totalInstalledCostRaw: body.totalInstalledCostRaw ?? null,
-      totalInstalledCostNumeric: parseMoney(body.totalInstalledCostRaw),
-      businessLines: body.businessLines ?? existing.businessLines,
-      contractReviewRvwNumber: body.contractReviewRvwNumber ?? null,
-      isEpcPrime: body.isEpcPrime ?? existing.isEpcPrime,
-      requestType: body.requestType ?? null,
-      riskIdentificationStatus: body.riskIdentificationStatus ?? null,
-      preRiskTargetDate: body.preRiskTargetDate ?? null,
-      formalRiskTargetDate: body.formalRiskTargetDate ?? null,
-      proposalDueDate: body.proposalDueDate ?? null,
-      formalRiskDiscussionDate: body.formalRiskDiscussionDate ?? null,
-      finalRiskTargetDate: body.finalRiskTargetDate ?? null,
-      preRiskLead: body.preRiskLead ?? null,
-      formalRiskLead: body.formalRiskLead ?? null,
-      status: body.status ?? existing.status,
-      nextAction: body.nextAction ?? null,
-      owner: body.owner ?? null,
-      notes: body.notes ?? null,
-    })
-    .where(eq(riskReviewRequestsTable.id, id));
-
-  if (body.triggerIds) {
-    await replaceTriggers(id, body.triggerIds);
+  const parsed = UpdateRequestBody.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res
+      .status(400)
+      .json({ message: "Invalid request body", issues: parsed.error.issues });
+    return;
   }
-  if (body.attendees) {
-    await replaceAttendees(id, body.attendees);
+  const { triggerIds, attendees, bmcdContractValueRaw, totalInstalledCostRaw, ...rest } =
+    parsed.data;
+
+  // Partial-update semantics: only write keys actually provided in the body so
+  // omitted fields are preserved rather than nulled out.
+  const values: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rest)) {
+    if (value !== undefined) values[key] = value;
+  }
+  if (bmcdContractValueRaw !== undefined) {
+    values.bmcdContractValueRaw = bmcdContractValueRaw;
+    values.bmcdContractValueNumeric = parseMoney(bmcdContractValueRaw);
+  }
+  if (totalInstalledCostRaw !== undefined) {
+    values.totalInstalledCostRaw = totalInstalledCostRaw;
+    values.totalInstalledCostNumeric = parseMoney(totalInstalledCostRaw);
+  }
+
+  if (
+    Object.keys(values).length === 0 &&
+    triggerIds === undefined &&
+    attendees === undefined
+  ) {
+    res.status(400).json({ message: "No updatable fields provided" });
+    return;
+  }
+
+  if (Object.keys(values).length > 0) {
+    await db
+      .update(riskReviewRequestsTable)
+      .set(values as Partial<typeof riskReviewRequestsTable.$inferInsert>)
+      .where(eq(riskReviewRequestsTable.id, id));
+  }
+
+  if (triggerIds) {
+    await replaceTriggers(id, triggerIds);
+  }
+  if (attendees) {
+    await replaceAttendees(id, attendees);
   }
   await recomputeClassification(id);
 

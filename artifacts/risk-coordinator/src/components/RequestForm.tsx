@@ -35,6 +35,7 @@ const formSchema = z.object({
   riskIdentificationStatus: z.string().optional(),
   preRiskTargetDate: z.string().optional(),
   formalRiskTargetDate: z.string().optional(),
+  formalRiskDiscussionDate: z.string().optional(),
   finalRiskTargetDate: z.string().optional(),
   proposalDueDate: z.string().optional(),
   preRiskLead: z.string().optional(),
@@ -88,6 +89,7 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
       riskIdentificationStatus: initialData?.riskIdentificationStatus || "",
       preRiskTargetDate: toDateInput(initialData?.preRiskTargetDate),
       formalRiskTargetDate: toDateInput(initialData?.formalRiskTargetDate),
+      formalRiskDiscussionDate: toDateInput(initialData?.formalRiskDiscussionDate),
       finalRiskTargetDate: toDateInput(initialData?.finalRiskTargetDate),
       proposalDueDate: toDateInput(initialData?.proposalDueDate),
       preRiskLead: initialData?.preRiskLead || "",
@@ -123,6 +125,7 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
       requesterEmail: clean(values.requesterEmail),
       preRiskTargetDate: clean(values.preRiskTargetDate),
       formalRiskTargetDate: clean(values.formalRiskTargetDate),
+      formalRiskDiscussionDate: clean(values.formalRiskDiscussionDate),
       finalRiskTargetDate: clean(values.finalRiskTargetDate),
       proposalDueDate: clean(values.proposalDueDate),
       requestType: clean(values.requestType),
@@ -273,6 +276,9 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
             )} />
             <FormField control={form.control} name="formalRiskTargetDate" render={({ field }) => (
               <FormItem><FormLabel>Formal Risk Target Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>
+            )} />
+            <FormField control={form.control} name="formalRiskDiscussionDate" render={({ field }) => (
+              <FormItem><FormLabel>Formal Risk Discussion Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>
             )} />
             <FormField control={form.control} name="finalRiskTargetDate" render={({ field }) => (
               <FormItem><FormLabel>Final Risk Target Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>

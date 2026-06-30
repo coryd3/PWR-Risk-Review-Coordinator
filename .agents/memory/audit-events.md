@@ -4,8 +4,8 @@ description: Every mutating API path must write an audit_events row
 ---
 
 The `audit_events` table existing in the schema is not enough — an acceptance
-review fails if no handler writes to it. task-1.md requires "record status-history
-and audit events on changes."
+review fails if no handler writes to it. Acceptance criteria for this app require
+recording status-history and audit events on changes.
 
 **Rule:** Every mutating endpoint (create/update/delete/classify/status-change/
 note/draft generate+update/config edits) must call the `recordAudit()` helper.
