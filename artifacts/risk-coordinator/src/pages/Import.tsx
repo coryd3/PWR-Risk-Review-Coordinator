@@ -139,7 +139,7 @@ function OutcomeRow({ outcome: o }: { outcome: ImportOutcome }) {
         )}
         {o.warnings && o.warnings.length > 0 && (
           <ul className="mt-1 space-y-0.5">
-            {o.warnings.map((w, i) => (
+            {o.warnings.map((w: string, i: number) => (
               <li
                 key={i}
                 className="text-xs text-amber-700 dark:text-amber-500 flex items-start gap-1.5"

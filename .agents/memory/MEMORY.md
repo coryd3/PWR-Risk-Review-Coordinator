@@ -5,4 +5,5 @@
 - [DB & scripts tooling](db-and-scripts-tooling.md) — drizzle generate is broken (use push + pg_dump); scripts need drizzle-orm direct dep; xlsx ESM has no readFile.
 - [Usage tracking](usage-tracking.md) — external forwarding is production-only env; POST /usage now behind RBAC (not open); impact math frozen at write, rounded at read.
 - [RBAC session role](rbac-session-role.md) — never trust session-embedded role; re-read from DB per request so demotions apply; first-admin bootstrap needs an advisory lock.
+- [Auth login in preview iframe](replit-auth-iframe-login.md) — OIDC sign-in fails ("invalid auth request") inside the embedded preview; login() opens a top-level tab when framed.
 - [Import validation reasons](import-validation-reasons.md) — unparseable dates block a row as errors; unknown triggers/missing roles/no client warn but still import; keep existing reason substrings.

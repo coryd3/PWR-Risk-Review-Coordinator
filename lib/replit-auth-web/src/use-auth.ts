@@ -43,7 +43,21 @@ export function useAuth(): AuthState {
 
   const login = useCallback(() => {
     const base = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(base)}`;
+    const url = new URL(
+      `/api/login?returnTo=${encodeURIComponent(base)}`,
+      window.location.href,
+    ).href;
+
+    // The OIDC provider sets SameSite=None cookies and blocks framing, so the
+    // login flow cannot complete inside an embedded preview iframe. When we are
+    // framed, open the flow in a top-level browser tab instead.
+    const isFramed = window.self !== window.top;
+    if (isFramed) {
+      window.open(url, "_blank", "noopener");
+      return;
+    }
+
+    window.location.href = url;
   }, []);
 
   const logout = useCallback(() => {
