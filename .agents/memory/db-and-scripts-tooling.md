@@ -16,3 +16,10 @@ description: Non-obvious gotchas for changing the Drizzle schema and writing sta
 # xlsx (SheetJS) in ESM
 - The ESM build does NOT export `readFile`. Use `XLSX.read(fs.readFileSync(path), { cellDates: true })`, not `XLSX.readFile(path)`.
 - `XLSX.utils.sheet_to_json(sheet, { defval: null, raw: true })` returns native types (Date for dates with `cellDates`, numbers, strings) which is convenient for normalization.
+- The ESM build ALSO does not expose `XLSX.SSF`, so any Excel numeric-serial date fallback (`XLSX.SSF?.parse_date_code`) silently no-ops (returns null). Rely on `cellDates: true` giving Date objects instead; do not depend on serial parsing.
+- `sheet_to_json` drops fully-blank trailing rows entirely, so a CSV's empty last line never reaches row-level code — test blank-row handling at the unit level, not via a fixture.
+- xlsx must be a direct dep of the package and actually installed; a stale lockfile can leave it declared-but-missing (`ERR_MODULE_NOT_FOUND: xlsx`) until `pnpm --filter <pkg> install`.
+
+# Running unit tests in the scripts package
+- Tests use Node's built-in runner via tsx: `node --import tsx --test "lib/**/*.test.ts"`. Plain `node --test` can't resolve `@workspace/*`/`xlsx`; the tsx loader is required.
+- Keep pure parsing/decision logic DB-free (inject db lookups) so it can be unit-tested with in-memory fakes and no DATABASE_URL. Only `import type` from `@workspace/db` in those modules — a value import triggers the Pool + DATABASE_URL check at load.
