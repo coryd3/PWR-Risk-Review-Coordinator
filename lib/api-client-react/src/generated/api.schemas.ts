@@ -571,8 +571,83 @@ export interface DashboardSummary {
   total: number;
 }
 
+export interface UsageEvent {
+  id: number;
+  program: string;
+  /** @nullable */
+  addin?: string | null;
+  /** @nullable */
+  version?: string | null;
+  usage: string;
+  action: string;
+  /** @nullable */
+  username?: string | null;
+  usageUnit: number;
+  minutesPerUnit: number;
+  minutesSaved: number;
+  hoursSaved: number;
+  /** @nullable */
+  entityType?: string | null;
+  /** @nullable */
+  entityId?: number | null;
+  source: string;
+  forwardStatus: string;
+  /** @nullable */
+  forwardError?: string | null;
+  /** @nullable */
+  detail?: string | null;
+  /** @nullable */
+  createdAt?: string | null;
+}
+
+export interface RecordUsageBody {
+  program?: string;
+  addin?: string;
+  version?: string;
+  usage?: string;
+  action?: string;
+  username?: string;
+  usageUnit?: number;
+  minutesPerUnit?: number;
+  source?: string;
+  detail?: string;
+}
+
+export interface UsageActionSummary {
+  action: string;
+  label: string;
+  count: number;
+  usageUnits: number;
+  minutesSaved: number;
+  hoursSaved: number;
+  dollarsSaved: number;
+}
+
+export interface UsageMonthSummary {
+  month: string;
+  count: number;
+  minutesSaved: number;
+  hoursSaved: number;
+  dollarsSaved: number;
+}
+
+export interface UsageSummary {
+  rate: number;
+  totalEvents: number;
+  totalUsageUnits: number;
+  totalMinutesSaved: number;
+  totalHoursSaved: number;
+  totalDollarsSaved: number;
+  byAction: UsageActionSummary[];
+  byMonth: UsageMonthSummary[];
+}
+
 /**
  * Resource not found
  */
 export type NotFoundResponse = Error;
+
+export type ListUsageEventsParams = {
+limit?: number;
+};
 

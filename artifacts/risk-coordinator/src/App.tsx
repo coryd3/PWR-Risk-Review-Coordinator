@@ -9,6 +9,7 @@ import RequestDetail from "@/pages/RequestDetail";
 import EditRequest from "@/pages/EditRequest";
 import Meetings from "@/pages/Meetings";
 import Admin from "@/pages/Admin";
+import Impact from "@/pages/Impact";
 import { Layout } from "@/components/Layout";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/requests/:id" component={RequestDetail} />
         <Route path="/requests/:id/edit" component={EditRequest} />
         <Route path="/meetings" component={Meetings} />
+        <Route path="/impact" component={Impact} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>

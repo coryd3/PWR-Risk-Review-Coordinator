@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FilePlus2, CalendarDays, Settings } from "lucide-react";
+import { LayoutDashboard, FilePlus2, CalendarDays, BarChart3, Settings } from "lucide-react";
 import logoUrl from "@/assets/brand/logo-bmcd-white.svg";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -9,6 +9,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/requests/new", label: "New Request", icon: FilePlus2 },
     { href: "/meetings", label: "Meetings", icon: CalendarDays },
+    { href: "/impact", label: "Impact", icon: BarChart3 },
     { href: "/admin", label: "Admin Config", icon: Settings },
   ];
 

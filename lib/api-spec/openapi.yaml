@@ -529,6 +529,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
 
+  /usage:
+    get:
+      operationId: listUsageEvents
+      tags: [usage]
+      summary: List recent usage-tracking events
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent usage events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UsageEvent"
+    post:
+      operationId: recordUsageEvent
+      tags: [usage]
+      summary: Record a usage-tracking event (open to any platform)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordUsageBody"
+      responses:
+        "201":
+          description: Created usage event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageEvent"
+
+  /usage/summary:
+    get:
+      operationId: getUsageSummary
+      tags: [usage]
+      summary: Aggregated usage impact (hours and dollars saved)
+      responses:
+        "200":
+          description: Usage impact summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageSummary"
+
 components:
   parameters:
     RequestId:
@@ -1437,3 +1488,157 @@ components:
           type: integer
         total:
           type: integer
+
+    UsageEvent:
+      type: object
+      required:
+        - id
+        - program
+        - usage
+        - action
+        - usageUnit
+        - minutesPerUnit
+        - minutesSaved
+        - hoursSaved
+        - source
+        - forwardStatus
+      properties:
+        id:
+          type: integer
+        program:
+          type: string
+        addin:
+          type: ["string", "null"]
+        version:
+          type: ["string", "null"]
+        usage:
+          type: string
+        action:
+          type: string
+        username:
+          type: ["string", "null"]
+        usageUnit:
+          type: integer
+        minutesPerUnit:
+          type: integer
+        minutesSaved:
+          type: integer
+        hoursSaved:
+          type: number
+        entityType:
+          type: ["string", "null"]
+        entityId:
+          type: ["integer", "null"]
+        source:
+          type: string
+        forwardStatus:
+          type: string
+        forwardError:
+          type: ["string", "null"]
+        detail:
+          type: ["string", "null"]
+        createdAt:
+          type: ["string", "null"]
+
+    RecordUsageBody:
+      type: object
+      properties:
+        program:
+          type: string
+        addin:
+          type: string
+        version:
+          type: string
+        usage:
+          type: string
+        action:
+          type: string
+        username:
+          type: string
+        usageUnit:
+          type: integer
+        minutesPerUnit:
+          type: integer
+        source:
+          type: string
+        detail:
+          type: string
+
+    UsageActionSummary:
+      type: object
+      required:
+        - action
+        - label
+        - count
+        - usageUnits
+        - minutesSaved
+        - hoursSaved
+        - dollarsSaved
+      properties:
+        action:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        usageUnits:
+          type: integer
+        minutesSaved:
+          type: integer
+        hoursSaved:
+          type: number
+        dollarsSaved:
+          type: number
+
+    UsageMonthSummary:
+      type: object
+      required:
+        - month
+        - count
+        - minutesSaved
+        - hoursSaved
+        - dollarsSaved
+      properties:
+        month:
+          type: string
+        count:
+          type: integer
+        minutesSaved:
+          type: integer
+        hoursSaved:
+          type: number
+        dollarsSaved:
+          type: number
+
+    UsageSummary:
+      type: object
+      required:
+        - rate
+        - totalEvents
+        - totalUsageUnits
+        - totalMinutesSaved
+        - totalHoursSaved
+        - totalDollarsSaved
+        - byAction
+        - byMonth
+      properties:
+        rate:
+          type: number
+        totalEvents:
+          type: integer
+        totalUsageUnits:
+          type: integer
+        totalMinutesSaved:
+          type: integer
+        totalHoursSaved:
+          type: number
+        totalDollarsSaved:
+          type: number
+        byAction:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsageActionSummary"
+        byMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsageMonthSummary"

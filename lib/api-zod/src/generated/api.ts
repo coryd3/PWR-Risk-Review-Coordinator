@@ -899,3 +899,100 @@ export const GetDashboardSummaryResponse = zod.object({
 })
 
 
+/**
+ * @summary List recent usage-tracking events
+ */
+export const ListUsageEventsQueryParams = zod.object({
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListUsageEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "program": zod.string(),
+  "addin": zod.string().nullish(),
+  "version": zod.string().nullish(),
+  "usage": zod.string(),
+  "action": zod.string(),
+  "username": zod.string().nullish(),
+  "usageUnit": zod.number(),
+  "minutesPerUnit": zod.number(),
+  "minutesSaved": zod.number(),
+  "hoursSaved": zod.number(),
+  "entityType": zod.string().nullish(),
+  "entityId": zod.number().nullish(),
+  "source": zod.string(),
+  "forwardStatus": zod.string(),
+  "forwardError": zod.string().nullish(),
+  "detail": zod.string().nullish(),
+  "createdAt": zod.string().nullish()
+})
+export const ListUsageEventsResponse = zod.array(ListUsageEventsResponseItem)
+
+
+/**
+ * @summary Record a usage-tracking event (open to any platform)
+ */
+export const RecordUsageEventBody = zod.object({
+  "program": zod.string().optional(),
+  "addin": zod.string().optional(),
+  "version": zod.string().optional(),
+  "usage": zod.string().optional(),
+  "action": zod.string().optional(),
+  "username": zod.string().optional(),
+  "usageUnit": zod.number().optional(),
+  "minutesPerUnit": zod.number().optional(),
+  "source": zod.string().optional(),
+  "detail": zod.string().optional()
+})
+
+export const RecordUsageEventResponse = zod.object({
+  "id": zod.number(),
+  "program": zod.string(),
+  "addin": zod.string().nullish(),
+  "version": zod.string().nullish(),
+  "usage": zod.string(),
+  "action": zod.string(),
+  "username": zod.string().nullish(),
+  "usageUnit": zod.number(),
+  "minutesPerUnit": zod.number(),
+  "minutesSaved": zod.number(),
+  "hoursSaved": zod.number(),
+  "entityType": zod.string().nullish(),
+  "entityId": zod.number().nullish(),
+  "source": zod.string(),
+  "forwardStatus": zod.string(),
+  "forwardError": zod.string().nullish(),
+  "detail": zod.string().nullish(),
+  "createdAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Aggregated usage impact (hours and dollars saved)
+ */
+export const GetUsageSummaryResponse = zod.object({
+  "rate": zod.number(),
+  "totalEvents": zod.number(),
+  "totalUsageUnits": zod.number(),
+  "totalMinutesSaved": zod.number(),
+  "totalHoursSaved": zod.number(),
+  "totalDollarsSaved": zod.number(),
+  "byAction": zod.array(zod.object({
+  "action": zod.string(),
+  "label": zod.string(),
+  "count": zod.number(),
+  "usageUnits": zod.number(),
+  "minutesSaved": zod.number(),
+  "hoursSaved": zod.number(),
+  "dollarsSaved": zod.number()
+})),
+  "byMonth": zod.array(zod.object({
+  "month": zod.string(),
+  "count": zod.number(),
+  "minutesSaved": zod.number(),
+  "hoursSaved": zod.number(),
+  "dollarsSaved": zod.number()
+}))
+})
+
+

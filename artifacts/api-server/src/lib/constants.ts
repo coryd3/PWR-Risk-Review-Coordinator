@@ -131,3 +131,66 @@ export const TEMPLATE_TYPES = [
 export const DEFAULT_TIMEZONE = "America/Chicago";
 export const DEFAULT_MEETING_DURATION_MINUTES = 60;
 export const DEFAULT_REMINDER_MINUTES = 15;
+
+// ---------------------------------------------------------------------------
+// Usage tracking (value measurement)
+// ---------------------------------------------------------------------------
+// "First-Order Impact" = direct time saved. For each tracked action we record a
+// UsageUnit count and multiply by a per-unit minutes-saved value to get the
+// hours (and dollars) saved. These mirror the parameters expected by the
+// external UsageTracking API (Program / Addin / Version / Usage / UsageUnit).
+
+export const USAGE_PROGRAM = "PWR Risk Review Coordinator";
+export const USAGE_VERSION = "1.0.0";
+
+// Moderate burdened labor rate used to convert saved hours into dollars.
+export const BURDENED_LABOR_RATE_USD = 85;
+
+export interface UsageActionDef {
+  addin: string;
+  usage: string;
+  minutesPerUnit: number;
+  label: string;
+  description: string;
+}
+
+// Catalog of tracked actions. This is the single source of truth for what the
+// app measures and how much manual effort each automated action replaces.
+// minutesPerUnit is the average time saved per UsageUnit; tune as governance
+// data improves.
+export const USAGE_ACTIONS = {
+  request_created: {
+    addin: "Requests",
+    usage: "Risk Review Request Intake",
+    minutesPerUnit: 20,
+    label: "Request intake",
+    description:
+      "Automated intake and classification of a new risk review request, versus manually collating the form and updating the tracker.",
+  },
+  email_drafts_generated: {
+    addin: "Email",
+    usage: "Meeting Email Draft Generation",
+    minutesPerUnit: 15,
+    label: "Email drafts generated",
+    description:
+      "Auto-generated meeting and request emails from templates, versus writing each message by hand.",
+  },
+  meeting_scheduled: {
+    addin: "Meetings",
+    usage: "Risk Meeting Scheduling",
+    minutesPerUnit: 10,
+    label: "Meetings scheduled",
+    description:
+      "Assembling meeting details and coordinating attendees, versus manual scheduling.",
+  },
+  tracker_imported: {
+    addin: "Import",
+    usage: "Legacy Tracker Import",
+    minutesPerUnit: 5,
+    label: "Tracker rows imported",
+    description:
+      "Bulk import of historical tracker rows, versus manual re-entry into the tool.",
+  },
+} as const satisfies Record<string, UsageActionDef>;
+
+export type UsageActionKey = keyof typeof USAGE_ACTIONS;

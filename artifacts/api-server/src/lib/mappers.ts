@@ -11,11 +11,35 @@ import type {
   RuleSetRow,
   StatusHistoryRow,
   NoteRow,
+  UsageEventRow,
 } from "@workspace/db";
 import type { ValidationWarning } from "./rules";
 
 function iso(d: Date | null | undefined): string | null {
   return d ? d.toISOString() : null;
+}
+
+export function mapUsageEvent(row: UsageEventRow) {
+  return {
+    id: row.id,
+    program: row.program,
+    addin: row.addin,
+    version: row.version,
+    usage: row.usage,
+    action: row.action,
+    username: row.username,
+    usageUnit: row.usageUnit,
+    minutesPerUnit: row.minutesPerUnit,
+    minutesSaved: row.minutesSaved,
+    hoursSaved: Math.round((row.minutesSaved / 60) * 100) / 100,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    source: row.source,
+    forwardStatus: row.forwardStatus,
+    forwardError: row.forwardError,
+    detail: row.detail,
+    createdAt: iso(row.createdAt),
+  };
 }
 
 export function mapRiskTrigger(row: RiskTriggerRow) {

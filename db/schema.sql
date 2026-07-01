@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict MemkqPc0NsKfmx5aPOiOfQTNgx4UH8wNmBhuDzmKEh8bQGoWWzt5NnByvj5Avgw
+\restrict ZhTaRQaM2VoEgIPXtXHhUAxpnzvuxAdDn3BkhdZOeUbdiuOUP0YQpNmCb9RhxN2
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -478,6 +478,51 @@ ALTER SEQUENCE public.status_history_id_seq OWNED BY public.status_history.id;
 
 
 --
+-- Name: usage_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.usage_events (
+    id integer NOT NULL,
+    program text NOT NULL,
+    addin text,
+    version text,
+    usage text NOT NULL,
+    action text NOT NULL,
+    username text,
+    usage_unit integer DEFAULT 1 NOT NULL,
+    minutes_per_unit integer DEFAULT 0 NOT NULL,
+    minutes_saved integer DEFAULT 0 NOT NULL,
+    entity_type text,
+    entity_id integer,
+    source text DEFAULT 'app'::text NOT NULL,
+    forward_status text DEFAULT 'disabled'::text NOT NULL,
+    forward_error text,
+    detail text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: usage_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.usage_events_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: usage_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.usage_events_id_seq OWNED BY public.usage_events.id;
+
+
+--
 -- Name: attendees id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -559,6 +604,13 @@ ALTER TABLE ONLY public.rule_sets ALTER COLUMN id SET DEFAULT nextval('public.ru
 --
 
 ALTER TABLE ONLY public.status_history ALTER COLUMN id SET DEFAULT nextval('public.status_history_id_seq'::regclass);
+
+
+--
+-- Name: usage_events id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usage_events ALTER COLUMN id SET DEFAULT nextval('public.usage_events_id_seq'::regclass);
 
 
 --
@@ -666,6 +718,14 @@ ALTER TABLE ONLY public.status_history
 
 
 --
+-- Name: usage_events usage_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usage_events
+    ADD CONSTRAINT usage_events_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: attendees attendees_request_id_risk_review_requests_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -733,5 +793,5 @@ ALTER TABLE ONLY public.status_history
 -- PostgreSQL database dump complete
 --
 
-\unrestrict MemkqPc0NsKfmx5aPOiOfQTNgx4UH8wNmBhuDzmKEh8bQGoWWzt5NnByvj5Avgw
+\unrestrict ZhTaRQaM2VoEgIPXtXHhUAxpnzvuxAdDn3BkhdZOeUbdiuOUP0YQpNmCb9RhxN2
 

@@ -45,6 +45,7 @@ import {
   meetingsTable,
   importedTrackerRowsTable,
   auditEventsTable,
+  usageEventsTable,
   type RiskTriggerRow,
 } from "@workspace/db";
 
@@ -52,6 +53,10 @@ import {
 // (artifacts/api-server/src/lib/{rules,constants,requestService}.ts). Replicated
 // here, as the seed script does, to avoid a cross-artifact import of the
 // Express server package from this standalone tooling package.
+
+// Minutes of manual data entry saved per imported tracker row. Mirrors
+// USAGE_ACTIONS.tracker_imported.minutesPerUnit in the api-server constants.
+const USAGE_TRACKER_MINUTES_PER_ROW = 5;
 
 const ATTENDEE_ROLES = [
   "Business-Line Director",
@@ -645,6 +650,26 @@ async function main(): Promise<void> {
             crmOpportunityNumber: crm,
             projectName,
           }),
+        });
+
+        // Usage tracking: each imported row is manual data entry avoided.
+        // Values mirror USAGE_ACTIONS.tracker_imported in the api-server
+        // constants (replicated inline to avoid a cross-artifact import).
+        await tx.insert(usageEventsTable).values({
+          program: "PWR Risk Review Coordinator",
+          addin: "Import",
+          version: "1.0.0",
+          usage: "Legacy Tracker Import",
+          action: "tracker_imported",
+          username: "import-tracker",
+          usageUnit: 1,
+          minutesPerUnit: USAGE_TRACKER_MINUTES_PER_ROW,
+          minutesSaved: USAGE_TRACKER_MINUTES_PER_ROW,
+          entityType: "request",
+          entityId: requestId,
+          source: "import",
+          forwardStatus: "disabled",
+          detail: JSON.stringify({ sourceFile, rowNumber }),
         });
       });
 

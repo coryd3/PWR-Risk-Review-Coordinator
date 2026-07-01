@@ -31,6 +31,7 @@ import type {
   EmailTemplateUpdate,
   GenerateDraftsInput,
   HealthStatus,
+  ListUsageEventsParams,
   Meeting,
   MeetingInput,
   MeetingUpdate,
@@ -38,6 +39,7 @@ import type {
   NotFoundResponse,
   Note,
   NoteInput,
+  RecordUsageBody,
   RiskReviewRequest,
   RiskReviewRequestDetail,
   RiskReviewRequestInput,
@@ -47,7 +49,9 @@ import type {
   RuleSet,
   RuleSetUpdate,
   StatusChangeInput,
-  StatusHistoryEntry
+  StatusHistoryEntry,
+  UsageEvent,
+  UsageSummary
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -2058,6 +2062,237 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardSummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListUsageEventsUrl = (params?: ListUsageEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/usage?${stringifiedParams}` : `/api/usage`
+}
+
+/**
+ * @summary List recent usage-tracking events
+ */
+export const listUsageEvents = async (params?: ListUsageEventsParams, options?: RequestInit): Promise<UsageEvent[]> => {
+
+  return customFetch<UsageEvent[]>(getListUsageEventsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListUsageEventsQueryKey = (params?: ListUsageEventsParams,) => {
+    return [
+    `/api/usage`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListUsageEventsQueryOptions = <TData = Awaited<ReturnType<typeof listUsageEvents>>, TError = ErrorType<unknown>>(params?: ListUsageEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUsageEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListUsageEventsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUsageEvents>>> = ({ signal }) => listUsageEvents(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listUsageEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListUsageEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listUsageEvents>>>
+export type ListUsageEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List recent usage-tracking events
+ */
+
+export function useListUsageEvents<TData = Awaited<ReturnType<typeof listUsageEvents>>, TError = ErrorType<unknown>>(
+ params?: ListUsageEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUsageEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListUsageEventsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRecordUsageEventUrl = () => {
+
+
+
+
+  return `/api/usage`
+}
+
+/**
+ * @summary Record a usage-tracking event (open to any platform)
+ */
+export const recordUsageEvent = async (recordUsageBody: RecordUsageBody, options?: RequestInit): Promise<UsageEvent> => {
+
+  return customFetch<UsageEvent>(getRecordUsageEventUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(recordUsageBody)
+  }
+);}
+
+
+
+
+export const getRecordUsageEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordUsageEvent>>, TError,{data: BodyType<RecordUsageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordUsageEvent>>, TError,{data: BodyType<RecordUsageBody>}, TContext> => {
+
+const mutationKey = ['recordUsageEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordUsageEvent>>, {data: BodyType<RecordUsageBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordUsageEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordUsageEventMutationResult = NonNullable<Awaited<ReturnType<typeof recordUsageEvent>>>
+    export type RecordUsageEventMutationBody = BodyType<RecordUsageBody>
+    export type RecordUsageEventMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Record a usage-tracking event (open to any platform)
+ */
+export const useRecordUsageEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordUsageEvent>>, TError,{data: BodyType<RecordUsageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordUsageEvent>>,
+        TError,
+        {data: BodyType<RecordUsageBody>},
+        TContext
+      > => {
+      return useMutation(getRecordUsageEventMutationOptions(options));
+    }
+
+export const getGetUsageSummaryUrl = () => {
+
+
+
+
+  return `/api/usage/summary`
+}
+
+/**
+ * @summary Aggregated usage impact (hours and dollars saved)
+ */
+export const getUsageSummary = async ( options?: RequestInit): Promise<UsageSummary> => {
+
+  return customFetch<UsageSummary>(getGetUsageSummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUsageSummaryQueryKey = () => {
+    return [
+    `/api/usage/summary`
+    ] as const;
+    }
+
+
+export const getGetUsageSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getUsageSummary>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsageSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUsageSummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsageSummary>>> = ({ signal }) => getUsageSummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsageSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUsageSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getUsageSummary>>>
+export type GetUsageSummaryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Aggregated usage impact (hours and dollars saved)
+ */
+
+export function useGetUsageSummary<TData = Awaited<ReturnType<typeof getUsageSummary>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsageSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUsageSummaryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

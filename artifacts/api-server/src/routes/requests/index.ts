@@ -44,6 +44,7 @@ import {
 } from "../../lib/templates";
 import { buildCalendarPreview } from "../../lib/calendar";
 import { recordAudit } from "../../lib/audit";
+import { recordUsage } from "../../lib/usage";
 
 const router: IRouter = Router();
 
@@ -111,6 +112,13 @@ router.post("/requests", async (req: Request, res: Response): Promise<void> => {
     action: "create",
     actor: body.requesterEmail ?? body.requesterName ?? null,
     detail: { projectName: created.projectName, status: created.status },
+  });
+  await recordUsage(req, {
+    action: "request_created",
+    username: body.requesterEmail ?? body.requesterName ?? null,
+    entityType: "request",
+    entityId: created.id,
+    detail: { projectName: created.projectName },
   });
 
   const detail = await loadRequestDetail(created.id);
@@ -362,6 +370,12 @@ router.post(
       action: "create",
       detail: { requestId: id, meetingType: inserted[0].meetingType },
     });
+    await recordUsage(req, {
+      action: "meeting_scheduled",
+      entityType: "meeting",
+      entityId: inserted[0].id,
+      detail: { requestId: id, meetingType: inserted[0].meetingType },
+    });
     res.status(201).json(mapMeeting(inserted[0]));
   },
 );
@@ -441,6 +455,15 @@ router.post(
       action: "generate",
       detail: { requestId: id, count: created.length, types },
     });
+    if (created.length > 0) {
+      await recordUsage(req, {
+        action: "email_drafts_generated",
+        usageUnit: created.length,
+        entityType: "request",
+        entityId: id,
+        detail: { requestId: id, count: created.length, types },
+      });
+    }
     res.status(201).json(created);
   },
 );
