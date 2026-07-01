@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ZhTaRQaM2VoEgIPXtXHhUAxpnzvuxAdDn3BkhdZOeUbdiuOUP0YQpNmCb9RhxN2
+\restrict UGb1rI1epscSHmtYUh2DyLAp2qlBo6FqCDRHOmcLQNckThywcf9hn0lhw7fHcFq
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -350,7 +350,12 @@ CREATE TABLE public.risk_review_requests (
     status text DEFAULT 'New'::text NOT NULL,
     next_action text,
     owner text,
-    notes text
+    notes text,
+    delivery_method text,
+    region text,
+    legal_missing_explanation text,
+    risk_identification_date date,
+    risk_identification_explanation text
 );
 
 
@@ -443,6 +448,17 @@ ALTER SEQUENCE public.rule_sets_id_seq OWNED BY public.rule_sets.id;
 
 
 --
+-- Name: sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sessions (
+    sid character varying NOT NULL,
+    sess jsonb NOT NULL,
+    expire timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: status_history; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -520,6 +536,22 @@ CREATE SEQUENCE public.usage_events_id_seq
 --
 
 ALTER SEQUENCE public.usage_events_id_seq OWNED BY public.usage_events.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    email character varying,
+    first_name character varying,
+    last_name character varying,
+    profile_image_url character varying,
+    role character varying DEFAULT 'requester'::character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
 
 
 --
@@ -710,6 +742,14 @@ ALTER TABLE ONLY public.rule_sets
 
 
 --
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (sid);
+
+
+--
 -- Name: status_history status_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -723,6 +763,29 @@ ALTER TABLE ONLY public.status_history
 
 ALTER TABLE ONLY public.usage_events
     ADD CONSTRAINT usage_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_email_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_unique UNIQUE (email);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: IDX_session_expire; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "IDX_session_expire" ON public.sessions USING btree (expire);
 
 
 --
@@ -793,5 +856,5 @@ ALTER TABLE ONLY public.status_history
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ZhTaRQaM2VoEgIPXtXHhUAxpnzvuxAdDn3BkhdZOeUbdiuOUP0YQpNmCb9RhxN2
+\unrestrict UGb1rI1epscSHmtYUh2DyLAp2qlBo6FqCDRHOmcLQNckThywcf9hn0lhw7fHcFq
 

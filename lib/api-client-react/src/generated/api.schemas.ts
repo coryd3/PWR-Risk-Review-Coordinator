@@ -327,6 +327,16 @@ export interface RiskReviewRequest {
   /** @nullable */
   riskIdentificationStatus?: string | null;
   /** @nullable */
+  riskIdentificationDate?: string | null;
+  /** @nullable */
+  riskIdentificationExplanation?: string | null;
+  /** @nullable */
+  deliveryMethod?: string | null;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  legalMissingExplanation?: string | null;
+  /** @nullable */
   preRiskTargetDate?: string | null;
   /** @nullable */
   formalRiskTargetDate?: string | null;
@@ -386,6 +396,16 @@ export interface RiskReviewRequestDetail {
   /** @nullable */
   riskIdentificationStatus?: string | null;
   /** @nullable */
+  riskIdentificationDate?: string | null;
+  /** @nullable */
+  riskIdentificationExplanation?: string | null;
+  /** @nullable */
+  deliveryMethod?: string | null;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  legalMissingExplanation?: string | null;
+  /** @nullable */
   preRiskTargetDate?: string | null;
   /** @nullable */
   formalRiskTargetDate?: string | null;
@@ -437,6 +457,16 @@ export interface RiskReviewRequestInput {
   /** @nullable */
   riskIdentificationStatus?: string | null;
   /** @nullable */
+  riskIdentificationDate?: string | null;
+  /** @nullable */
+  riskIdentificationExplanation?: string | null;
+  /** @nullable */
+  deliveryMethod?: string | null;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  legalMissingExplanation?: string | null;
+  /** @nullable */
   preRiskTargetDate?: string | null;
   /** @nullable */
   formalRiskTargetDate?: string | null;
@@ -485,6 +515,16 @@ export interface RiskReviewRequestUpdate {
   requestType?: string | null;
   /** @nullable */
   riskIdentificationStatus?: string | null;
+  /** @nullable */
+  riskIdentificationDate?: string | null;
+  /** @nullable */
+  riskIdentificationExplanation?: string | null;
+  /** @nullable */
+  deliveryMethod?: string | null;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  legalMissingExplanation?: string | null;
   /** @nullable */
   preRiskTargetDate?: string | null;
   /** @nullable */
@@ -548,6 +588,8 @@ export interface AppConfig {
   statuses: string[];
   nextActions: string[];
   businessLines: string[];
+  deliveryMethods: string[];
+  regions: string[];
   meetingTypes: string[];
   meetingStatuses: string[];
   attendeeRoles: string[];

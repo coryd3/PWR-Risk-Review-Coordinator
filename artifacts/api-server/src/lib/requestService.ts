@@ -121,7 +121,7 @@ export async function recomputeClassification(
   const request = await getRequestRow(requestId);
   if (!request) return undefined;
   const triggers = await getTriggersForRequest(requestId);
-  const isMajorOpportunity = classifyMajor(triggers);
+  const isMajorOpportunity = classifyMajor(request, triggers);
   const businessLineClassification = classifyBusinessLine(
     request.businessLines ?? [],
   );

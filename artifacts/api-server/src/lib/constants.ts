@@ -38,7 +38,7 @@ export const NEXT_ACTIONS = [
 
 export const BUSINESS_LINES = [
   "BESS",
-  "Decarbonization",
+  "NES",
   "GHI",
   "Nuclear",
   "Solar",
@@ -51,11 +51,32 @@ export const MEETING_STATUSES = [
   "Not Started",
   "Needs Scheduling",
   "Scheduled",
+  "Indicative",
+  "Waiting for Client",
+  "Not Needed",
+  "N/A",
   "Complete",
   "Rescheduled",
   "Cancelled",
   "On Hold",
 ] as const;
+
+// Project delivery method. Central to Major-opportunity classification per the
+// validated packet: Design-Build/EPC and Professional Services use the BMcD fee
+// threshold; Design-Bid-Build uses the Total Installed Cost threshold.
+export const DELIVERY_METHODS = [
+  "Design-Build / EPC",
+  "Design-Bid-Build",
+  "Professional Services",
+] as const;
+
+// Geographic region. KC (Kansas City home office) vs Non-KC drives regional
+// attendee routing and reporting.
+export const REGIONS = ["KC", "Non-KC"] as const;
+
+// Major-opportunity thresholds (USD).
+export const MAJOR_FEE_THRESHOLD_USD = 10_000_000;
+export const MAJOR_DBB_TIC_THRESHOLD_USD = 50_000_000;
 
 export const EPC_PRIME_ROLES = [
   "Business-Line Director",

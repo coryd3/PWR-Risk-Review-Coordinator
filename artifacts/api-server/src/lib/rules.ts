@@ -5,18 +5,58 @@ import type {
   RiskTriggerRow,
   AttendeeRow,
 } from "@workspace/db";
-import { REQUIRED_ATTENDEE_ROLES } from "./constants";
+import {
+  REQUIRED_ATTENDEE_ROLES,
+  MAJOR_FEE_THRESHOLD_USD,
+  MAJOR_DBB_TIC_THRESHOLD_USD,
+} from "./constants";
 
 export interface ValidationWarning {
   code: string;
   message: string;
 }
 
-// A request is Major if the selected risk triggers include Trigger 1 or 2.
-export function classifyMajor(triggers: Pick<RiskTriggerRow, "triggerNumber" | "isMajorOpportunityTrigger">[]): boolean {
-  return triggers.some(
-    (t) => t.isMajorOpportunityTrigger || t.triggerNumber === 1 || t.triggerNumber === 2,
-  );
+// Major-opportunity classification (validated packet logic):
+//   - Design-Build / EPC  with BMcD fee  > $10M  => Major
+//   - Professional Services with BMcD fee > $10M => Major
+//   - Design-Bid-Build (DBB) with Total Installed Cost > $50M => Major
+// An explicitly Major-flagged risk trigger also forces Major, preserving the
+// admin-configurable trigger override.
+export function classifyMajor(
+  request: Pick<
+    RiskReviewRequestRow,
+    | "deliveryMethod"
+    | "isEpcPrime"
+    | "bmcdContractValueNumeric"
+    | "totalInstalledCostNumeric"
+  >,
+  triggers: Pick<RiskTriggerRow, "triggerNumber" | "isMajorOpportunityTrigger">[],
+): boolean {
+  const method = (request.deliveryMethod ?? "").toLowerCase();
+  const fee = request.bmcdContractValueNumeric ?? 0;
+  const tic = request.totalInstalledCostNumeric ?? 0;
+
+  const isEpcOrDb =
+    request.isEpcPrime ||
+    method.includes("epc") ||
+    method.includes("design-build") ||
+    method.includes("design build");
+  const isDbb =
+    method.includes("bid-build") ||
+    method.includes("bid build") ||
+    method.includes("dbb");
+  const isProfessionalServices = method.includes("professional");
+
+  if ((isEpcOrDb || isProfessionalServices) && fee > MAJOR_FEE_THRESHOLD_USD) {
+    return true;
+  }
+  if (isDbb && tic > MAJOR_DBB_TIC_THRESHOLD_USD) {
+    return true;
+  }
+  if (triggers.some((t) => t.isMajorOpportunityTrigger)) {
+    return true;
+  }
+  return false;
 }
 
 // Business line classification from the multi-select business lines.
@@ -76,6 +116,16 @@ export function computeWarnings(
       message: "Formal Risk is requested but legal information is incomplete.",
     });
   }
+  // Legal info missing is a warning, not a blocker: allow the request to proceed
+  // as long as an explanation is provided.
+  const legalExplanation = (request.legalMissingExplanation ?? "").trim();
+  if ((attorneyMissing || rvwMissing) && legalExplanation === "") {
+    warnings.push({
+      code: "legal_missing_explanation_required",
+      message:
+        "Legal information is missing. Provide an explanation so the review can proceed.",
+    });
+  }
   if (isFinalRiskRequested(request) && !request.formalRiskDiscussionDate) {
     warnings.push({
       code: "final_risk_missing_formal_date",
@@ -85,10 +135,29 @@ export function computeWarnings(
   }
 
   const riskId = (request.riskIdentificationStatus ?? "").trim();
-  if (riskId === "" || riskId.toLowerCase() === "no") {
+  const riskIdLower = riskId.toLowerCase();
+  const riskIdExplanation = (request.riskIdentificationExplanation ?? "").trim();
+  if (riskId === "") {
     warnings.push({
       code: "risk_identification_status",
-      message: "Risk Identification Meeting status is No or blank.",
+      message: "Risk Identification Meeting status is blank.",
+    });
+  } else if (riskIdLower === "no" && riskIdExplanation === "") {
+    warnings.push({
+      code: "risk_identification_no_explanation",
+      message:
+        "Risk Identification is No. Provide an explanation of why one is not needed.",
+    });
+  } else if (riskIdLower === "scheduled" && !request.riskIdentificationDate) {
+    warnings.push({
+      code: "risk_identification_date_missing",
+      message:
+        "Risk Identification is Scheduled. Provide the scheduled date.",
+    });
+  } else if (riskIdLower === "other" && riskIdExplanation === "") {
+    warnings.push({
+      code: "risk_identification_other_explanation",
+      message: "Risk Identification is Other. Provide an explanation.",
     });
   }
 

@@ -411,7 +411,7 @@ async function main() {
         crmOpportunityNumber: "OPP-000007",
         bmcdContractValueRaw: "$40,000,000",
         bmcdContractValueNumeric: 40000000,
-        businessLines: ["Decarbonization"],
+        businessLines: ["NES"],
         isEpcPrime: true,
         requestType: "Pre-Risk & Formal Risk Discussion",
         riskIdentificationStatus: "No",

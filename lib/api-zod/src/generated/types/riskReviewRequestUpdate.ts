@@ -31,6 +31,16 @@ export interface RiskReviewRequestUpdate {
   /** @nullable */
   riskIdentificationStatus?: string | null;
   /** @nullable */
+  riskIdentificationDate?: string | null;
+  /** @nullable */
+  riskIdentificationExplanation?: string | null;
+  /** @nullable */
+  deliveryMethod?: string | null;
+  /** @nullable */
+  region?: string | null;
+  /** @nullable */
+  legalMissingExplanation?: string | null;
+  /** @nullable */
   preRiskTargetDate?: string | null;
   /** @nullable */
   formalRiskTargetDate?: string | null;

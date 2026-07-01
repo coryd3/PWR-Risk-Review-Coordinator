@@ -10,6 +10,8 @@ export interface AppConfig {
   statuses: string[];
   nextActions: string[];
   businessLines: string[];
+  deliveryMethods: string[];
+  regions: string[];
   meetingTypes: string[];
   meetingStatuses: string[];
   attendeeRoles: string[];

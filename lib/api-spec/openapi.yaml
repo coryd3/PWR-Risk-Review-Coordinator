@@ -1355,6 +1355,16 @@ components:
           type: ["string", "null"]
         riskIdentificationStatus:
           type: ["string", "null"]
+        riskIdentificationDate:
+          type: ["string", "null"]
+        riskIdentificationExplanation:
+          type: ["string", "null"]
+        deliveryMethod:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        legalMissingExplanation:
+          type: ["string", "null"]
         preRiskTargetDate:
           type: ["string", "null"]
         formalRiskTargetDate:
@@ -1422,6 +1432,16 @@ components:
         requestType:
           type: ["string", "null"]
         riskIdentificationStatus:
+          type: ["string", "null"]
+        riskIdentificationDate:
+          type: ["string", "null"]
+        riskIdentificationExplanation:
+          type: ["string", "null"]
+        deliveryMethod:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        legalMissingExplanation:
           type: ["string", "null"]
         preRiskTargetDate:
           type: ["string", "null"]
@@ -1491,6 +1511,16 @@ components:
           type: ["string", "null"]
         riskIdentificationStatus:
           type: ["string", "null"]
+        riskIdentificationDate:
+          type: ["string", "null"]
+        riskIdentificationExplanation:
+          type: ["string", "null"]
+        deliveryMethod:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        legalMissingExplanation:
+          type: ["string", "null"]
         preRiskTargetDate:
           type: ["string", "null"]
         formalRiskTargetDate:
@@ -1550,6 +1580,16 @@ components:
         requestType:
           type: ["string", "null"]
         riskIdentificationStatus:
+          type: ["string", "null"]
+        riskIdentificationDate:
+          type: ["string", "null"]
+        riskIdentificationExplanation:
+          type: ["string", "null"]
+        deliveryMethod:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        legalMissingExplanation:
           type: ["string", "null"]
         preRiskTargetDate:
           type: ["string", "null"]
@@ -1644,6 +1684,8 @@ components:
         - statuses
         - nextActions
         - businessLines
+        - deliveryMethods
+        - regions
         - meetingTypes
         - meetingStatuses
         - attendeeRoles
@@ -1664,6 +1706,14 @@ components:
           items:
             type: string
         businessLines:
+          type: array
+          items:
+            type: string
+        deliveryMethods:
+          type: array
+          items:
+            type: string
+        regions:
           type: array
           items:
             type: string

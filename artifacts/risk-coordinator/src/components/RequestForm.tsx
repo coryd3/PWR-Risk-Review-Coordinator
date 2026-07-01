@@ -31,9 +31,14 @@ const formSchema = z.object({
   totalInstalledCostRaw: z.string().optional(),
   businessLines: z.array(z.string()).optional(),
   contractReviewRvwNumber: z.string().optional(),
+  deliveryMethod: z.string().optional(),
+  region: z.string().optional(),
+  legalMissingExplanation: z.string().optional(),
   isEpcPrime: z.boolean().optional(),
   requestType: z.string().optional(),
   riskIdentificationStatus: z.string().optional(),
+  riskIdentificationDate: z.string().optional(),
+  riskIdentificationExplanation: z.string().optional(),
   preRiskTargetDate: z.string().optional(),
   formalRiskTargetDate: z.string().optional(),
   formalRiskDiscussionDate: z.string().optional(),
@@ -85,9 +90,14 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
       totalInstalledCostRaw: initialData?.totalInstalledCostRaw || "",
       businessLines: initialData?.businessLines || [],
       contractReviewRvwNumber: initialData?.contractReviewRvwNumber || "",
+      deliveryMethod: initialData?.deliveryMethod || "",
+      region: initialData?.region || "",
+      legalMissingExplanation: initialData?.legalMissingExplanation || "",
       isEpcPrime: initialData?.isEpcPrime || false,
       requestType: initialData?.requestType || "",
       riskIdentificationStatus: initialData?.riskIdentificationStatus || "",
+      riskIdentificationDate: toDateInput(initialData?.riskIdentificationDate),
+      riskIdentificationExplanation: initialData?.riskIdentificationExplanation || "",
       preRiskTargetDate: toDateInput(initialData?.preRiskTargetDate),
       formalRiskTargetDate: toDateInput(initialData?.formalRiskTargetDate),
       formalRiskDiscussionDate: toDateInput(initialData?.formalRiskDiscussionDate),
@@ -174,6 +184,11 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
       proposalDueDate: clean(values.proposalDueDate),
       requestType: clean(values.requestType),
       riskIdentificationStatus: clean(values.riskIdentificationStatus),
+      riskIdentificationDate: clean(values.riskIdentificationDate),
+      riskIdentificationExplanation: clean(values.riskIdentificationExplanation),
+      deliveryMethod: clean(values.deliveryMethod),
+      region: clean(values.region),
+      legalMissingExplanation: clean(values.legalMissingExplanation),
       attendees: (values.attendees || [])
         .filter((a) => a.role && (a.name || a.email))
         .map((a) => ({ role: a.role, name: a.name || undefined, email: a.email || undefined })),
@@ -244,6 +259,28 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
                 </Select>
               </FormItem>
             )} />
+            <FormField control={form.control} name="deliveryMethod" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Delivery Method</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    {config?.deliveryMethods.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="region" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Region</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    {config?.regions.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )} />
             <FormField control={form.control} name="riskIdentificationStatus" render={({ field }) => (
               <FormItem>
                 <FormLabel>Risk Identification Status</FormLabel>
@@ -254,6 +291,12 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
                   </SelectContent>
                 </Select>
               </FormItem>
+            )} />
+            <FormField control={form.control} name="riskIdentificationDate" render={({ field }) => (
+              <FormItem><FormLabel>Risk Identification Date (if Scheduled)</FormLabel><FormControl><Input type="date" {...field} /></FormControl></FormItem>
+            )} />
+            <FormField control={form.control} name="riskIdentificationExplanation" render={({ field }) => (
+              <FormItem><FormLabel>Risk Identification Explanation (if No / Other)</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
             )} />
           </div>
         </section>
@@ -275,6 +318,9 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
               </FormControl>
               <FormLabel className="font-normal cursor-pointer">EPC Prime (Burns &amp; McDonnell is the prime contractor)</FormLabel>
             </FormItem>
+          )} />
+          <FormField control={form.control} name="legalMissingExplanation" render={({ field }) => (
+            <FormItem><FormLabel>Legal Missing Explanation (if Attorney or RVW # is missing)</FormLabel><FormControl><Textarea rows={2} {...field} /></FormControl></FormItem>
           )} />
         </section>
 
