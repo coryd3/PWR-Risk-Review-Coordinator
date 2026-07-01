@@ -18,7 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard, perm: "view" },
     { href: "/requests/new", label: "New Request", icon: FilePlus2, perm: "createRequest" },
     { href: "/meetings", label: "Meetings", icon: CalendarDays, perm: "view" },
-    { href: "/impact", label: "Impact", icon: BarChart3, perm: "view" },
+    { href: "/impact", label: "Impact", icon: BarChart3, perm: "admin" },
     { href: "/import", label: "Import Tracker", icon: Upload, perm: "admin" },
     { href: "/admin", label: "Admin Config", icon: Settings, perm: "admin" },
   ];

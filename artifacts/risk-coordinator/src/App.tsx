@@ -34,7 +34,7 @@ function Router() {
         {can("contribute") && <Route path="/requests/:id/edit" component={EditRequest} />}
         {canView && <Route path="/requests/:id" component={RequestDetail} />}
         {canView && <Route path="/meetings" component={Meetings} />}
-        {canView && <Route path="/impact" component={Impact} />}
+        {can("admin") && <Route path="/impact" component={Impact} />}
         {can("admin") && <Route path="/import" component={Import} />}
         {can("admin") && <Route path="/admin" component={Admin} />}
         <Route component={NotFound} />
