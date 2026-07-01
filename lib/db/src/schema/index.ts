@@ -11,3 +11,4 @@ export * from "./notes";
 export * from "./auditEvents";
 export * from "./importedTrackerRows";
 export * from "./usageEvents";
+export * from "./auth";

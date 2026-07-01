@@ -6,9 +6,14 @@ import {
   useUpdateRiskTrigger,
   useUpdateEmailTemplate,
   useUpdateRuleSet,
+  useListUsers,
+  useUpdateUserRole,
   getListRiskTriggersQueryKey,
   getListEmailTemplatesQueryKey,
   getListRuleSetsQueryKey,
+  getListUsersQueryKey,
+  UserRole,
+  type ManagedUser,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +31,96 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthContext, ROLE_LABELS, type UserRole as AppUserRole } from "@/lib/auth";
+
+const ROLE_OPTIONS: AppUserRole[] = ["admin", "contributor", "viewer", "requester"];
+
+function UsersAndRoles() {
+  const { user: currentUser } = useAuthContext();
+  const { data: users, isLoading } = useListUsers();
+  const updateRole = useUpdateUserRole();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleRoleChange = (target: ManagedUser, role: string) => {
+    if (role === target.role) return;
+    updateRole.mutate(
+      { id: target.id, data: { role: role as UserRole } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
+          toast({ title: "Role updated" });
+        },
+        onError: () =>
+          toast({ title: "Failed to update role", variant: "destructive" }),
+      },
+    );
+  };
+
+  const displayName = (u: ManagedUser) =>
+    [u.firstName, u.lastName].filter(Boolean).join(" ") || u.email || u.id;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Users &amp; Roles</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-48" />
+        ) : (
+          <div className="space-y-3">
+            {users?.map((u) => (
+              <div
+                key={u.id}
+                className="p-3 border rounded-md text-sm flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="font-semibold text-foreground truncate">
+                    {displayName(u)}
+                    {currentUser?.id === u.id && (
+                      <Badge variant="outline" className="ml-2 text-[10px]">You</Badge>
+                    )}
+                  </div>
+                  {u.email && (
+                    <div className="text-muted-foreground text-xs truncate">{u.email}</div>
+                  )}
+                </div>
+                <Select
+                  value={u.role}
+                  onValueChange={(value) => handleRoleChange(u, value)}
+                  disabled={updateRole.isPending}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+            {users && users.length === 0 && (
+              <p className="text-sm text-muted-foreground">No users yet.</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Admin() {
   const { data: triggers, isLoading: loadingTriggers } = useListRiskTriggers();
@@ -49,8 +143,10 @@ export default function Admin() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Admin Configuration</h1>
-        <p className="text-muted-foreground mt-1">View and edit risk triggers, email templates, and rule sets.</p>
+        <p className="text-muted-foreground mt-1">Manage users and roles, and edit risk triggers, email templates, and rule sets.</p>
       </div>
+
+      <UsersAndRoles />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>

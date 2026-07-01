@@ -61,6 +61,9 @@ function resolveUsername(
 ): string | null {
   if (explicit && explicit.trim() !== "") return explicit;
   if (req) {
+    const user = req.user;
+    if (user?.email && user.email.trim() !== "") return user.email;
+    if (user?.id) return user.id;
     const header =
       req.header("x-username") ??
       req.header("x-actor") ??

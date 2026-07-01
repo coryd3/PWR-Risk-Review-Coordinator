@@ -16,14 +16,16 @@ set in the **production** environment only.
 **How to apply:** never move `USAGE_TRACKING_URL` to `shared`/`development`. If
 forwarding needs local testing, use a throwaway URL in `development` only.
 
-## POST /api/usage is intentionally open (no auth)
-The whole api-server has no auth middleware (internal Burns & McDonnell tool), so
-the open usage-ingest endpoint is consistent, not an oversight. It exists so future
-platforms (Databricks App, Outlook/Graph add-in) can report usage cross-platform.
-**Why:** portability was an explicit requirement; adding auth to one endpoint while
-the rest is open would be inconsistent.
-**How to apply:** if auth is ever added, add it app-wide, not just to /usage. A code
-review flagging "open endpoint" here is a known accepted tradeoff.
+## POST /api/usage is now behind auth + RBAC (was open)
+The api-server now has Replit-Auth + 4-role RBAC app-wide (health/auth public,
+everything else behind `authorizeByRole`). POST /usage is NOT special-cased and
+falls to the default mutation policy (contributor/admin). No web client calls it
+directly — usage is recorded server-side inside route handlers via recordUsage().
+**Why:** the "no auth, open endpoint" tradeoff was retired when RBAC was added;
+enforcement is now consistent app-wide.
+**How to apply:** if a future cross-platform reporter (Databricks App, Graph add-in)
+must POST /usage without a session, add an explicit service-token path — do NOT
+reopen the endpoint to anonymous.
 
 ## BMcD governance naming + API fields
 `usage` event names follow `<Platform>_<System>_<Tool>_<Action>` (e.g.

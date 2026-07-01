@@ -12,6 +12,10 @@ export interface AuditInput {
 
 function resolveActor(req: Request, explicit?: string | null): string | null {
   if (explicit && explicit.trim() !== "") return explicit;
+  // Prefer the authenticated user's identity when a session is present.
+  const user = req.user;
+  if (user?.email && user.email.trim() !== "") return user.email;
+  if (user?.id) return user.id;
   const header = req.header("x-actor") ?? req.header("x-user-email");
   if (header && header.trim() !== "") return header;
   return null;
