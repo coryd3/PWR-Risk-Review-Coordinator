@@ -54,6 +54,9 @@ function printSummary(summary: ImportSummary): void {
       console.log(
         `    [${tag}] row ${o.rowNumber} — ${o.label}${o.reason ? `: ${o.reason}` : ""}`,
       );
+      for (const w of o.warnings ?? []) {
+        console.log(`             ⚠ ${w}`);
+      }
     }
   }
 }

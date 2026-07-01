@@ -656,6 +656,7 @@ export interface ImportOutcome {
   label: string;
   result: ImportOutcomeResult;
   reason?: string;
+  warnings?: string[];
 }
 
 export interface ImportSummary {

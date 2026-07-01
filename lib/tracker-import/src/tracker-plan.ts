@@ -15,7 +15,9 @@ import {
   buildLookup,
   classifyBusinessLine,
   classifyMajor,
+  collectDateProblems,
   extractAttendees,
+  missingRequiredAttendeeRoles,
   parseBool,
   parseDate,
   parseMoney,
@@ -102,6 +104,10 @@ export interface PlannedImport {
   meetings: PlannedMeeting[];
   finalNotes: string | null;
   noteSuffix: string | null;
+  // Non-blocking, plain-language advisories about this row (unrecognized risk
+  // triggers, missing required attendee roles, no client name). The row still
+  // imports; these tell the coordinator what to double-check in the source.
+  warnings: string[];
 }
 
 export type PlanResult =
@@ -114,6 +120,16 @@ export type PlanResult =
       // Whether the skipped row should still be staged in
       // imported_tracker_rows. A row skipped because it was *already* imported
       // is already staged, so it is not re-staged.
+      stage: boolean;
+    }
+  | {
+      // A row that can't be imported because of a data problem the coordinator
+      // must fix in the source file (e.g. an unparseable date). Unlike a skip,
+      // this counts as an error so it's surfaced prominently for correction.
+      kind: "error";
+      label: string;
+      rowHash: string;
+      reason: string;
       stage: boolean;
     }
   | {
@@ -195,7 +211,8 @@ export async function planRow(
       kind: "skip",
       label,
       rowHash,
-      reason: "missing both Project Name and CRM Opportunity Number",
+      reason:
+        "missing both Project Name and CRM Opportunity Number — a row needs at least one to become a request",
       stage: true,
     };
   }
@@ -212,6 +229,20 @@ export async function planRow(
         stage: true,
       };
     }
+  }
+
+  // Unparseable date cells block the row: importing would silently drop the
+  // date (and any meeting derived from it), so we surface a fixable error
+  // instead of a silent fallback.
+  const dateProblems = collectDateProblems(lookup);
+  if (dateProblems.length > 0) {
+    return {
+      kind: "error",
+      label,
+      rowHash,
+      reason: dateProblems.join("; "),
+      stage: true,
+    };
   }
 
   const { matched, unmatched } = resolveTriggers(
@@ -231,6 +262,24 @@ export async function planRow(
       ? `${requestValues.notes}\n${noteSuffix}`
       : (requestValues.notes ?? noteSuffix);
 
+  // Non-blocking advisories the coordinator should double-check. The row still
+  // imports; these just make terse/technical outcomes human-readable.
+  const warnings: string[] = [];
+  if (unmatched.length > 0) {
+    warnings.push(
+      `Unrecognized risk trigger(s): ${unmatched.join(", ")} — imported without them. Check the trigger numbers/names against the risk trigger list.`,
+    );
+  }
+  const missingRoles = missingRequiredAttendeeRoles(attendees);
+  if (missingRoles.length > 0) {
+    warnings.push(
+      `Missing required attendee role(s): ${missingRoles.join(", ")}.`,
+    );
+  }
+  if (!requestValues.clientName) {
+    warnings.push("No Client Name provided.");
+  }
+
   return {
     kind: "import",
     label,
@@ -243,6 +292,7 @@ export async function planRow(
       meetings,
       finalNotes,
       noteSuffix,
+      warnings,
     },
   };
 }

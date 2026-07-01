@@ -10,7 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/hooks/use-toast";
-import { UploadCloud, FileSpreadsheet, X } from "lucide-react";
+import {
+  UploadCloud,
+  FileSpreadsheet,
+  X,
+  AlertTriangle,
+  AlertCircle,
+} from "lucide-react";
 
 const ACCEPTED = ".xlsx,.xls,.csv";
 
@@ -37,6 +43,11 @@ function SummaryView({ summary }: { summary: ImportSummary }) {
     { label: "Errors", value: summary.errored, tone: "text-destructive" },
   ];
 
+  const errorRows = summary.outcomes.filter((o) => o.result === "error");
+  const warningRows = summary.outcomes.filter(
+    (o) => o.result === "imported" && (o.warnings?.length ?? 0) > 0,
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -62,34 +73,85 @@ function SummaryView({ summary }: { summary: ImportSummary }) {
           ))}
         </div>
 
+        {errorRows.length > 0 && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-4 h-4" />
+              {errorRows.length} row{errorRows.length === 1 ? "" : "s"} need
+              fixing before {summary.dryRun ? "import" : "re-import"}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              These rows were not imported. Fix them in the source spreadsheet
+              and upload again.
+            </p>
+            <div className="border rounded-lg divide-y bg-background max-h-[280px] overflow-y-auto">
+              {errorRows.map((o) => (
+                <OutcomeRow key={o.rowNumber} outcome={o} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {warningRows.length > 0 && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
+            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2 text-amber-700 dark:text-amber-500">
+              <AlertTriangle className="w-4 h-4" />
+              {warningRows.length} imported row
+              {warningRows.length === 1 ? "" : "s"} to double-check
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              These rows were imported, but something is worth reviewing.
+            </p>
+            <div className="border rounded-lg divide-y bg-background max-h-[280px] overflow-y-auto">
+              {warningRows.map((o) => (
+                <OutcomeRow key={o.rowNumber} outcome={o} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {summary.outcomes.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold mb-2">Row details</h3>
+            <h3 className="text-sm font-semibold mb-2">All rows</h3>
             <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto">
               {summary.outcomes.map((o) => (
-                <div
-                  key={o.rowNumber}
-                  className="p-3 text-sm flex items-start gap-3"
-                >
-                  <span className="text-xs text-muted-foreground font-mono pt-0.5 w-12 shrink-0">
-                    Row {o.rowNumber}
-                  </span>
-                  <div className="shrink-0">{resultBadge(o.result)}</div>
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{o.label}</div>
-                    {o.reason && (
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {o.reason}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <OutcomeRow key={o.rowNumber} outcome={o} />
               ))}
             </div>
           </div>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function OutcomeRow({ outcome: o }: { outcome: ImportOutcome }) {
+  return (
+    <div className="p-3 text-sm flex items-start gap-3">
+      <span className="text-xs text-muted-foreground font-mono pt-0.5 w-12 shrink-0">
+        Row {o.rowNumber}
+      </span>
+      <div className="shrink-0">{resultBadge(o.result)}</div>
+      <div className="min-w-0">
+        <div className="font-medium truncate">{o.label}</div>
+        {o.reason && (
+          <div className="text-xs text-muted-foreground mt-0.5">{o.reason}</div>
+        )}
+        {o.warnings && o.warnings.length > 0 && (
+          <ul className="mt-1 space-y-0.5">
+            {o.warnings.map((w, i) => (
+              <li
+                key={i}
+                className="text-xs text-amber-700 dark:text-amber-500 flex items-start gap-1.5"
+              >
+                <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                <span>{w}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
 

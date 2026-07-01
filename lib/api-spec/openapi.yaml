@@ -1910,6 +1910,10 @@ components:
             - error
         reason:
           type: string
+        warnings:
+          type: array
+          items:
+            type: string
 
     ImportSummary:
       type: object

@@ -1021,7 +1021,8 @@ export const ImportTrackerResponse = zod.object({
   "rowNumber": zod.number(),
   "label": zod.string(),
   "result": zod.enum(['imported', 'skipped', 'error']),
-  "reason": zod.string().optional()
+  "reason": zod.string().optional(),
+  "warnings": zod.array(zod.string()).optional()
 }))
 })
 

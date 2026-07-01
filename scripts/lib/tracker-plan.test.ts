@@ -116,6 +116,74 @@ test("planRow appends a note for unmatched triggers instead of dropping them", a
   assert.match(plan.payload.finalNotes ?? "", /mystery/);
 });
 
+test("planRow warns (plain language) about unrecognized risk triggers but still imports", async () => {
+  const plan = await planRow(
+    { ...FULL_ROW, "Risk Triggers": "1, mystery" },
+    2,
+    TRIGGERS,
+    fakeDeps(),
+  );
+  assert.equal(plan.kind, "import");
+  if (plan.kind !== "import") return;
+  const warning = plan.payload.warnings.find((w) =>
+    /Unrecognized risk trigger/.test(w),
+  );
+  assert.ok(warning, "expected an unrecognized-trigger warning");
+  assert.match(warning ?? "", /mystery/);
+});
+
+test("planRow warns about missing required attendee roles", async () => {
+  // FULL_ROW only supplies Business-Line Director and Project Manager, so the
+  // other required roles should be flagged.
+  const plan = await planRow(FULL_ROW, 2, TRIGGERS, fakeDeps());
+  assert.equal(plan.kind, "import");
+  if (plan.kind !== "import") return;
+  const warning = plan.payload.warnings.find((w) =>
+    /Missing required attendee role/.test(w),
+  );
+  assert.ok(warning, "expected a missing-required-role warning");
+  assert.match(warning ?? "", /Engineering Manager/);
+  assert.match(warning ?? "", /Attorney/);
+});
+
+test("planRow warns when Client Name is missing", async () => {
+  const { "Client Name": _drop, ...noClient } = FULL_ROW;
+  void _drop;
+  const plan = await planRow(noClient, 2, TRIGGERS, fakeDeps());
+  assert.equal(plan.kind, "import");
+  if (plan.kind !== "import") return;
+  assert.ok(
+    plan.payload.warnings.some((w) => /No Client Name/.test(w)),
+    "expected a missing client name warning",
+  );
+});
+
+test("planRow errors with a plain-language reason on an unparseable date", async () => {
+  const plan = await planRow(
+    { ...FULL_ROW, "Pre-Risk Target Date": "next Tuesday-ish" },
+    2,
+    TRIGGERS,
+    fakeDeps(),
+  );
+  assert.equal(plan.kind, "error");
+  if (plan.kind !== "error") return;
+  assert.match(plan.reason, /Pre-Risk Target Date/);
+  assert.match(plan.reason, /isn't a recognizable date/);
+  assert.match(plan.reason, /2025-07-15/); // suggests a valid format
+  // The row must still be staged (recorded) rather than silently dropped.
+  assert.equal(plan.stage, true);
+});
+
+test("planRow accepts blank date cells without erroring", async () => {
+  const plan = await planRow(
+    { ...FULL_ROW, "Formal Risk Target Date": "" },
+    2,
+    TRIGGERS,
+    fakeDeps(),
+  );
+  assert.equal(plan.kind, "import");
+});
+
 test("planRow skips a blank trailing row as 'empty' (not counted)", async () => {
   const plan = await planRow({ a: "", b: null, c: "   " }, 9, TRIGGERS, fakeDeps());
   assert.equal(plan.kind, "empty");

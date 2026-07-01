@@ -318,3 +318,57 @@ export function rowHasContent(lookup: Map<string, unknown>): boolean {
     (v) => v != null && String(v).trim() !== "",
   );
 }
+
+// --- Validation helpers -----------------------------------------------------
+// These turn the terse/technical outcomes of the pure parsers into
+// plain-language, actionable reasons a coordinator can act on: which cell is
+// wrong and how to fix it. They report on the raw row (not the parsed values)
+// so a present-but-unparseable cell is distinguished from a legitimately blank
+// one.
+
+// The date columns we parse into meetings/request fields, with the friendly
+// column name a coordinator sees in the spreadsheet.
+export const DATE_FIELDS: { label: string; aliases: string[] }[] = [
+  { label: "Pre-Risk Target Date", aliases: FIELD_ALIASES.preRiskTargetDate },
+  {
+    label: "Formal Risk Target Date",
+    aliases: FIELD_ALIASES.formalRiskTargetDate,
+  },
+  { label: "Proposal Due Date", aliases: FIELD_ALIASES.proposalDueDate },
+  {
+    label: "Formal Risk Discussion Date",
+    aliases: FIELD_ALIASES.formalRiskDiscussionDate,
+  },
+  {
+    label: "Final Risk Target Date",
+    aliases: FIELD_ALIASES.finalRiskTargetDate,
+  },
+];
+
+// Plain-language reasons for date cells that have content but can't be read as
+// a date. A blank cell is fine (the field is optional); a typo isn't, because
+// the date would otherwise be silently dropped.
+export function collectDateProblems(lookup: Map<string, unknown>): string[] {
+  const problems: string[] = [];
+  for (const { label, aliases } of DATE_FIELDS) {
+    const raw = pickRaw(lookup, aliases);
+    if (raw == null) continue;
+    const str = String(raw).trim();
+    if (str === "") continue;
+    if (parseDate(raw) == null) {
+      problems.push(
+        `${label} "${str}" isn't a recognizable date — use a format like 2025-07-15 or 07/15/2025`,
+      );
+    }
+  }
+  return problems;
+}
+
+// The required attendee roles that have no attendee in this row. Used to warn
+// (not block) so coordinators know which mandatory participants are missing.
+export function missingRequiredAttendeeRoles(
+  attendees: AttendeeRecord[],
+): string[] {
+  const present = new Set(attendees.map((a) => a.role));
+  return Array.from(REQUIRED_ATTENDEE_ROLES).filter((r) => !present.has(r));
+}

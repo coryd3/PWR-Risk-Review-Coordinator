@@ -67,6 +67,9 @@ export interface ImportOutcome {
   label: string;
   result: "imported" | "skipped" | "error";
   reason?: string;
+  // Non-blocking, plain-language advisories for a row that still imported
+  // (unrecognized triggers, missing required attendee roles, no client name).
+  warnings?: string[];
 }
 
 export interface ImportSummary {
@@ -336,9 +339,31 @@ export async function importTrackerRows(
       continue;
     }
 
+    if (plan.kind === "error") {
+      errored++;
+      outcomes.push({
+        rowNumber,
+        label: plan.label,
+        result: "error",
+        reason: plan.reason,
+      });
+      if (plan.stage && !dryRun) {
+        await stageOnly(
+          sourceFile,
+          rowNumber,
+          plan.rowHash,
+          row,
+          plan.reason,
+          "error",
+        );
+      }
+      continue;
+    }
+
     // plan.kind === "import"
     const { payload } = plan;
     const detail = importDetail(payload);
+    const warnings = payload.warnings.length > 0 ? payload.warnings : undefined;
 
     if (dryRun) {
       imported++;
@@ -347,6 +372,7 @@ export async function importTrackerRows(
         label: plan.label,
         result: "imported",
         reason: `would import (${detail})`,
+        warnings,
       });
       continue;
     }
@@ -359,6 +385,7 @@ export async function importTrackerRows(
         label: plan.label,
         result: "imported",
         reason: detail,
+        warnings,
       });
     } catch (err) {
       errored++;
