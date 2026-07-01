@@ -1137,6 +1137,8 @@ components:
           type: string
         ccRecipients:
           type: string
+        fromRecipients:
+          type: string
         subject:
           type: string
         body:
@@ -1156,6 +1158,8 @@ components:
         toRecipients:
           type: string
         ccRecipients:
+          type: string
+        fromRecipients:
           type: string
         subject:
           type: string
@@ -1651,6 +1655,8 @@ components:
         - body
         - timezone
       properties:
+        organizer:
+          type: string
         subject:
           type: string
         body:
@@ -1692,6 +1698,25 @@ components:
         note:
           type: string
 
+    EmailRouting:
+      type: object
+      required:
+        - mailbox
+        - coordinator
+      properties:
+        mailbox:
+          type: string
+        coordinator:
+          type: object
+          required:
+            - name
+            - email
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+
     AppConfig:
       type: object
       required:
@@ -1709,6 +1734,7 @@ components:
         - preRiskRequiredRoles
         - preRiskEpcDbbRequiredRoles
         - attendeeNamedDefaults
+        - emailRouting
         - requestTypes
         - riskIdentificationStatuses
         - draftStatuses
@@ -1770,6 +1796,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AttendeeNamedDefault'
+        emailRouting:
+          $ref: '#/components/schemas/EmailRouting'
         requestTypes:
           type: array
           items:

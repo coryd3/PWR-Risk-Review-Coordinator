@@ -40,6 +40,7 @@ export function buildTemplateContext(
   return {
     projectName: request.projectName ?? "TBD",
     clientName: request.clientName ?? "TBD",
+    requesterName: request.requesterName ?? "TBD",
     crmOpportunityNumber: request.crmOpportunityNumber ?? "TBD",
     riskTriggers:
       triggers.length > 0
@@ -102,4 +103,36 @@ export function defaultTemplateTypesForRequest(
     return ["Final Risk Review Request"];
   }
   return ["Pre-Risk / Risk Review Request", "Formal Risk Request"];
+}
+
+export interface DraftRecipients {
+  to: string;
+  cc: string;
+  from: string;
+}
+
+function recipientLabel(entry: { name: string; email: string }): string {
+  return entry.email && entry.email.trim() !== "" ? entry.email : entry.name;
+}
+
+// Default To/CC/From for a generated draft. Pre-Risk drafts go to the coordinator
+// AND the requester; Formal/Final (and other) drafts go to the coordinator only.
+// Every draft is sent from the shared risk-review mailbox. All values remain
+// editable by the coordinator before sending.
+export function defaultRecipientsForType(
+  templateType: string,
+  request: RiskReviewRequestRow,
+  routing: { mailbox: string; coordinator: { name: string; email: string } },
+): DraftRecipients {
+  const to: string[] = [recipientLabel(routing.coordinator)].filter(
+    (v) => v && v.trim() !== "",
+  );
+  if (templateType.toLowerCase().includes("pre-risk")) {
+    const requester =
+      request.requesterEmail && request.requesterEmail.trim() !== ""
+        ? request.requesterEmail
+        : request.requesterName;
+    if (requester && requester.trim() !== "") to.push(requester);
+  }
+  return { to: to.join("; "), cc: "", from: routing.mailbox };
 }

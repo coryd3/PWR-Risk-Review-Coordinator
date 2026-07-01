@@ -569,6 +569,7 @@ export const ListEmailDraftsResponseItem = zod.object({
   "templateType": zod.string().nullish(),
   "toRecipients": zod.string().optional(),
   "ccRecipients": zod.string().optional(),
+  "fromRecipients": zod.string().optional(),
   "subject": zod.string(),
   "body": zod.string(),
   "status": zod.string(),
@@ -599,6 +600,7 @@ export const GenerateEmailDraftsResponseItem = zod.object({
   "templateType": zod.string().nullish(),
   "toRecipients": zod.string().optional(),
   "ccRecipients": zod.string().optional(),
+  "fromRecipients": zod.string().optional(),
   "subject": zod.string(),
   "body": zod.string(),
   "status": zod.string(),
@@ -619,6 +621,7 @@ export const UpdateEmailDraftParams = zod.object({
 export const UpdateEmailDraftBody = zod.object({
   "toRecipients": zod.string().optional(),
   "ccRecipients": zod.string().optional(),
+  "fromRecipients": zod.string().optional(),
   "subject": zod.string().optional(),
   "body": zod.string().optional(),
   "status": zod.string().optional()
@@ -632,6 +635,7 @@ export const UpdateEmailDraftResponse = zod.object({
   "templateType": zod.string().nullish(),
   "toRecipients": zod.string().optional(),
   "ccRecipients": zod.string().optional(),
+  "fromRecipients": zod.string().optional(),
   "subject": zod.string(),
   "body": zod.string(),
   "status": zod.string(),
@@ -764,6 +768,7 @@ export const GenerateCalendarPreviewBody = zod.object({
 })
 
 export const GenerateCalendarPreviewResponse = zod.object({
+  "organizer": zod.string().optional(),
   "subject": zod.string(),
   "body": zod.string(),
   "requiredAttendees": zod.array(zod.string()).optional(),
@@ -922,6 +927,13 @@ export const GetConfigResponse = zod.object({
   "email": zod.string().optional(),
   "note": zod.string().optional()
 })),
+  "emailRouting": zod.object({
+  "mailbox": zod.string(),
+  "coordinator": zod.object({
+  "name": zod.string(),
+  "email": zod.string()
+})
+}),
   "requestTypes": zod.array(zod.string()),
   "riskIdentificationStatuses": zod.array(zod.string()),
   "draftStatuses": zod.array(zod.string()),

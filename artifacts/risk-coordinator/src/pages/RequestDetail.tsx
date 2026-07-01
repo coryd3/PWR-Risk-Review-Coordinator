@@ -164,7 +164,7 @@ export default function RequestDetail() {
           <StatusWorkflowSection request={request} config={config} />
           <MeetingsSection request={request} config={config} />
           <EmailDraftsSection requestId={requestId} config={config} />
-          <CalendarPreviewSection requestId={requestId} />
+          <CalendarPreviewSection requestId={requestId} requestType={request.requestType} />
         </div>
       </div>
     </div>
@@ -406,6 +406,7 @@ function DraftItem({ draft, draftStatuses, onSave, isSaving }: { draft: any, dra
   const [isEditing, setIsEditing] = useState(false);
   const [to, setTo] = useState(draft.toRecipients || "");
   const [cc, setCc] = useState(draft.ccRecipients || "");
+  const [from, setFrom] = useState(draft.fromRecipients || "");
   const [subject, setSubject] = useState(draft.subject || "");
   const [body, setBody] = useState(draft.body || "");
   const [status, setStatus] = useState(draft.status || "Draft");
@@ -419,8 +420,12 @@ function DraftItem({ draft, draftStatuses, onSave, isSaving }: { draft: any, dra
           <Badge variant="secondary">{draft.templateType}</Badge>
           <div className="flex gap-2">
             <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-            <Button size="sm" onClick={() => { onSave({ toRecipients: to, ccRecipients: cc, subject, body, status }); setIsEditing(false); }} disabled={isSaving} className="rounded-full">Save</Button>
+            <Button size="sm" onClick={() => { onSave({ toRecipients: to, ccRecipients: cc, fromRecipients: from, subject, body, status }); setIsEditing(false); }} disabled={isSaving} className="rounded-full">Save</Button>
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">From</Label>
+          <Input value={from} onChange={e => setFrom(e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground">To</Label>
@@ -462,6 +467,7 @@ function DraftItem({ draft, draftStatuses, onSave, isSaving }: { draft: any, dra
       <div className="text-xs text-muted-foreground mb-3 flex gap-2 items-center flex-wrap">
         <Badge variant="outline" className="text-[10px]">{draft.templateType}</Badge>
         <Badge variant={draft.status === "Sent Manually" ? "default" : "secondary"} className="text-[10px]">{draft.status}</Badge>
+        {draft.fromRecipients && <span className="truncate">From: {draft.fromRecipients}</span>}
         <span className="truncate">To: {draft.toRecipients}</span>
         {draft.ccRecipients && <span className="truncate">CC: {draft.ccRecipients}</span>}
       </div>
@@ -520,13 +526,17 @@ function NotesSection({ requestId }: { requestId: number }) {
   );
 }
 
-function CalendarPreviewSection({ requestId }: { requestId: number }) {
-  const [meetingType, setMeetingType] = useState("Formal Risk");
+function CalendarPreviewSection({ requestId, requestType }: { requestId: number, requestType?: string | null }) {
   const generatePreview = useGenerateCalendarPreview();
   const [preview, setPreview] = useState<any>(null);
 
+  // Only Pre-Risk reviews receive a calendar invite. Formal/Final stages are
+  // scheduled by Corporate Risk, so no invite is generated here.
+  const isPreRisk = (requestType ?? "").toLowerCase().includes("pre-risk");
+  if (!isPreRisk) return null;
+
   const handlePreview = () => {
-    generatePreview.mutate({ id: requestId, data: { meetingType } }, {
+    generatePreview.mutate({ id: requestId, data: { meetingType: "Pre-Risk" } }, {
       onSuccess: (data) => setPreview(data),
     });
   };
@@ -534,27 +544,25 @@ function CalendarPreviewSection({ requestId }: { requestId: number }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold tracking-tight">Invite Preview</h2>
+        <h2 className="text-xl font-bold tracking-tight">Pre-Risk Invite Preview</h2>
         <Badge variant="secondary">Preview Only</Badge>
       </div>
-      <p className="text-xs text-muted-foreground mb-6">See how a calendar invite would look before scheduling. No event will be created.</p>
-      
+      <p className="text-xs text-muted-foreground mb-6">See how the Pre-Risk calendar invite would look before scheduling. No event will be created.</p>
+
       <div className="flex gap-2 mb-6">
-        <Select value={meetingType} onValueChange={setMeetingType}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Pre-Risk">Pre-Risk</SelectItem>
-            <SelectItem value="Formal Risk">Formal Risk</SelectItem>
-            <SelectItem value="Final Risk">Final Risk</SelectItem>
-          </SelectContent>
-        </Select>
         <Button variant="outline" onClick={handlePreview} disabled={generatePreview.isPending} className="rounded-full">
-          {generatePreview.isPending ? "Loading..." : "Generate"}
+          {generatePreview.isPending ? "Loading..." : "Generate Pre-Risk Preview"}
         </Button>
       </div>
 
       {preview && (
         <div className="border border-border rounded-xl p-4 bg-muted/10 space-y-4 animate-in fade-in">
+          {preview.organizer && (
+            <div>
+              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Organizer</div>
+              <div className="text-sm">{preview.organizer}</div>
+            </div>
+          )}
           <div>
             <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Subject</div>
             <div className="font-medium text-sm">{preview.subject}</div>

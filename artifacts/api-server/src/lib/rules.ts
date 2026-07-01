@@ -312,13 +312,14 @@ export function computeAttendeeMatrix(
         if (rule.role === "President of Construction" && !(isEpc && tic > EPC_PRESIDENT_TIC_THRESHOLD_USD)) {
           continue;
         }
+        // Facility Security Director and the alternate CDB Operations Executive
+        // seat are EPC-only per the packet.
         if (rule.role === "Facility Security Director" && !isEpc) continue;
+        if (rule.role === "CDB Operations Executive" && !isEpc) continue;
         optional.push(rule);
       }
-      if (isEpc || isDbb) {
-        if (hasSolar) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.solarEpcDbb);
-        if (hasBess) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.bessEpcDbb);
-      }
+      if (hasSolar) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.solarEpcDbb);
+      if (hasBess) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.bessEpcDbb);
     }
   }
 

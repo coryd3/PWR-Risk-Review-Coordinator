@@ -11,10 +11,12 @@ import {
   DEFAULT_TIMEZONE,
   DEFAULT_MEETING_DURATION_MINUTES,
   DEFAULT_REMINDER_MINUTES,
+  RISK_REVIEW_MAILBOX,
 } from "./constants";
 
 export interface CalendarPreview {
   meetingType: string;
+  organizer: string;
   subject: string;
   body: string;
   requiredAttendees: string[];
@@ -106,6 +108,7 @@ export function buildCalendarPreview(
 
   return {
     meetingType,
+    organizer: RISK_REVIEW_MAILBOX,
     subject,
     body,
     requiredAttendees: attendeeNames(attendees, true),

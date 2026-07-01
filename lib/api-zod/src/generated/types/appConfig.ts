@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AttendeeNamedDefault } from './attendeeNamedDefault';
+import type { EmailRouting } from './emailRouting';
 
 export interface AppConfig {
   statuses: string[];
@@ -22,6 +23,7 @@ export interface AppConfig {
   preRiskRequiredRoles: string[];
   preRiskEpcDbbRequiredRoles: string[];
   attendeeNamedDefaults: AttendeeNamedDefault[];
+  emailRouting: EmailRouting;
   requestTypes: string[];
   riskIdentificationStatuses: string[];
   draftStatuses: string[];

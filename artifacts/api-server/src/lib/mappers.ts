@@ -128,6 +128,7 @@ export function mapEmailDraft(row: EmailDraftRow) {
     templateType: row.templateType,
     toRecipients: row.toRecipients,
     ccRecipients: row.ccRecipients,
+    fromRecipients: row.fromRecipients,
     subject: row.subject,
     body: row.body,
     status: row.status,

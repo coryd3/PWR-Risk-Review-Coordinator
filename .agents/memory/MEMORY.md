@@ -2,8 +2,10 @@
 - [Drizzle partial update guard](drizzle-partial-update.md) — `.set({})` throws 500 "No values to set"; always strip undefined and 400 on empty body.
 - [Audit events requirement](audit-events.md) — every mutating API path must call recordAudit(); acceptance review fails if audit_events stays unwritten.
 - [Required attendee roles](required-attendee-roles.md) — 6 mandatory roles; single source REQUIRED_ATTENDEE_ROLES drives warnings, /config, and form pre-seeding.
+- [Attendee matrix](attendee-matrix.md) — attendees are a matrix (meeting stage x EPC/DBB x Major x business line), not a flat list; named people are configurable defaults, never hardcoded.
 - [DB & scripts tooling](db-and-scripts-tooling.md) — drizzle generate is broken (use push + pg_dump); scripts need drizzle-orm direct dep; xlsx ESM has no readFile.
 - [Usage tracking](usage-tracking.md) — external forwarding is production-only env; POST /usage now behind RBAC (not open); impact math frozen at write, rounded at read.
 - [RBAC session role](rbac-session-role.md) — never trust session-embedded role; re-read from DB per request so demotions apply; first-admin bootstrap needs an advisory lock.
 - [Auth login in preview iframe](replit-auth-iframe-login.md) — OIDC sign-in fails ("invalid auth request") inside the embedded preview; login() opens a top-level tab when framed.
 - [Import validation reasons](import-validation-reasons.md) — unparseable dates block a row as errors; unknown triggers/missing roles/no client warn but still import; keep existing reason substrings.
+- [Policy enforcement server-side](policy-enforcement-server-side.md) — packet scope rules (e.g. Pre-Risk-only calendar) must be guarded in the API route, not just hidden in the UI, or review fails.

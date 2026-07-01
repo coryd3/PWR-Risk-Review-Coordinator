@@ -41,8 +41,10 @@ import {
   buildTemplateContext,
   renderTemplate,
   defaultTemplateTypesForRequest,
+  defaultRecipientsForType,
 } from "../../lib/templates";
 import { buildCalendarPreview } from "../../lib/calendar";
+import { RISK_REVIEW_MAILBOX, RISK_COORDINATOR_RECIPIENT } from "../../lib/constants";
 import { recordAudit } from "../../lib/audit";
 import { recordUsage } from "../../lib/usage";
 
@@ -438,6 +440,10 @@ router.post(
       const template = templates.find((t) => t.active) ?? templates[0];
       if (!template) continue;
       const { subject, body: renderedBody } = renderTemplate(template, context);
+      const recipients = defaultRecipientsForType(type, detail.row, {
+        mailbox: RISK_REVIEW_MAILBOX,
+        coordinator: RISK_COORDINATOR_RECIPIENT,
+      });
       const inserted = await db
         .insert(emailDraftsTable)
         .values({
@@ -445,8 +451,9 @@ router.post(
           meetingId: body.meetingId ?? null,
           templateId: template.id,
           templateType: type,
-          toRecipients: "",
-          ccRecipients: "",
+          toRecipients: recipients.to,
+          ccRecipients: recipients.cc,
+          fromRecipients: recipients.from,
           subject,
           body: renderedBody,
           status: "Draft",
@@ -602,6 +609,27 @@ router.post(
       return;
     }
     const body = GenerateCalendarPreviewBody.parse(req.body ?? {});
+    // Calendar invites are only generated for the Pre-Risk stage. Formal/Final
+    // stages are scheduled by Corporate Risk, so reject non-Pre-Risk requests
+    // and any non-Pre-Risk meetingType rather than silently producing an invite.
+    const isPreRiskRequest = (detail.row.requestType ?? "")
+      .toLowerCase()
+      .includes("pre-risk");
+    if (!isPreRiskRequest) {
+      res.status(400).json({
+        message: "Calendar invites are only generated for Pre-Risk reviews.",
+      });
+      return;
+    }
+    if (
+      body.meetingType != null &&
+      !body.meetingType.toLowerCase().includes("pre-risk")
+    ) {
+      res.status(400).json({
+        message: "Calendar preview meeting type must be Pre-Risk.",
+      });
+      return;
+    }
     let meeting = null;
     if (body.meetingId != null) {
       meeting =
@@ -611,7 +639,7 @@ router.post(
       detail.row,
       detail.triggers,
       detail.attendees,
-      { meetingType: body.meetingType ?? undefined, meeting },
+      { meetingType: "Pre-Risk", meeting },
     );
     res.json(preview);
   },

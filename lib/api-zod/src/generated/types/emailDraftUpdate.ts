@@ -9,6 +9,7 @@
 export interface EmailDraftUpdate {
   toRecipients?: string;
   ccRecipients?: string;
+  fromRecipients?: string;
   subject?: string;
   body?: string;
   status?: string;

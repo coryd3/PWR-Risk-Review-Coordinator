@@ -41,6 +41,8 @@ import {
   PRE_RISK_REQUIRED,
   PRE_RISK_EPC_DBB_REQUIRED,
   PRE_RISK_OPTIONAL,
+  RISK_REVIEW_MAILBOX,
+  RISK_COORDINATOR_RECIPIENT,
   type AttendeeRule,
 } from "../../lib/constants";
 
@@ -248,6 +250,10 @@ router.get("/config", (_req: Request, res: Response): void => {
     preRiskRequiredRoles: mandatoryRoles(PRE_RISK_REQUIRED),
     preRiskEpcDbbRequiredRoles: mandatoryRoles(PRE_RISK_EPC_DBB_REQUIRED),
     attendeeNamedDefaults,
+    emailRouting: {
+      mailbox: RISK_REVIEW_MAILBOX,
+      coordinator: { ...RISK_COORDINATOR_RECIPIENT },
+    },
     requestTypes: [...REQUEST_TYPES],
     riskIdentificationStatuses: [...RISK_IDENTIFICATION_STATUSES],
     draftStatuses: [...DRAFT_STATUSES],

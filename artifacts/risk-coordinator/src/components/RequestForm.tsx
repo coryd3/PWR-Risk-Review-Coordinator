@@ -123,25 +123,66 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
     name: "attendees",
   });
 
-  const requiredRoles = config?.requiredAttendeeRoles ?? [];
-  const seeded = useRef(false);
+  // Required roles depend on the meeting stages implied by the request type plus
+  // the delivery method (EPC/DBB), mirroring the backend attendee matrix.
+  const watchedRequestType = form.watch("requestType");
+  const watchedIsEpcPrime = form.watch("isEpcPrime");
+  const watchedDeliveryMethod = form.watch("deliveryMethod");
+  const requiredRoles = useMemo(() => {
+    if (!config) return [] as string[];
+    const method = (watchedDeliveryMethod ?? "").toLowerCase();
+    const isEpc =
+      Boolean(watchedIsEpcPrime) ||
+      method.includes("epc") ||
+      method.includes("design-build") ||
+      method.includes("design build");
+    const isDbb =
+      method.includes("bid-build") ||
+      method.includes("bid build") ||
+      method.includes("dbb");
+    const type = (watchedRequestType ?? "").toLowerCase();
+    const needsPreRisk = type.includes("pre-risk");
+    const needsFormalOrFinal =
+      type.includes("formal risk") || type.includes("final risk");
+    const roles: string[] = [];
+    if (needsFormalOrFinal) {
+      roles.push(...(config.formalFinalRequiredRoles ?? []));
+      if (isEpc) roles.push(...(config.formalFinalEpcRequiredRoles ?? []));
+    }
+    if (needsPreRisk) {
+      roles.push(...(config.preRiskRequiredRoles ?? []));
+      if (isEpc || isDbb) roles.push(...(config.preRiskEpcDbbRequiredRoles ?? []));
+    }
+    // Fall back to the flat list when no request type is chosen yet.
+    if (roles.length === 0) roles.push(...(config.requiredAttendeeRoles ?? []));
+    return Array.from(new Set(roles));
+  }, [config, watchedRequestType, watchedIsEpcPrime, watchedDeliveryMethod]);
+
+  const defaultNameByRole = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of config?.attendeeNamedDefaults ?? []) {
+      if (d.defaultName) map.set(d.role, d.defaultName);
+    }
+    return map;
+  }, [config]);
+
+  const requiredKey = requiredRoles.join("|");
   useEffect(() => {
-    if (!config || seeded.current) return;
-    seeded.current = true;
+    if (!config) return;
     const current = form.getValues("attendees") || [];
     const firstByRole = new Map<string, { role: string; name?: string; email?: string }>();
     for (const a of current) if (!firstByRole.has(a.role)) firstByRole.set(a.role, a);
     // One canonical row per required role at the top (reusing the first existing
-    // attendee for that role if present), then every other attendee preserved in
-    // order — including any additional same-role duplicates.
+    // attendee for that role if present, pre-filling any configured default
+    // name), then every other attendee preserved in order.
     const requiredRows = requiredRoles.map(
-      (r) => firstByRole.get(r) ?? { role: r, name: "", email: "" },
+      (r) => firstByRole.get(r) ?? { role: r, name: defaultNameByRole.get(r) ?? "", email: "" },
     );
     const usedRequired = new Set(requiredRows);
     const others = current.filter((a) => !usedRequired.has(a));
     replaceAttendees([...requiredRows, ...others]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config]);
+  }, [config, requiredKey]);
 
   if (loadingConfig || loadingTriggers) {
     return <div className="space-y-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-64 w-full" /></div>;

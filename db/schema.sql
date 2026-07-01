@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict UGb1rI1epscSHmtYUh2DyLAp2qlBo6FqCDRHOmcLQNckThywcf9hn0lhw7fHcFq
+\restrict AOyi7AqjaKMdArxfxrPhUaaDwgMSK2tGpGQPMlsRA4VzUYPzcx2q8rAy8wzHI4p
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -110,7 +110,8 @@ CREATE TABLE public.email_drafts (
     status text DEFAULT 'Draft'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    sent_at timestamp with time zone
+    sent_at timestamp with time zone,
+    from_recipients text DEFAULT ''::text NOT NULL
 );
 
 
@@ -856,5 +857,5 @@ ALTER TABLE ONLY public.status_history
 -- PostgreSQL database dump complete
 --
 
-\unrestrict UGb1rI1epscSHmtYUh2DyLAp2qlBo6FqCDRHOmcLQNckThywcf9hn0lhw7fHcFq
+\unrestrict AOyi7AqjaKMdArxfxrPhUaaDwgMSK2tGpGQPMlsRA4VzUYPzcx2q8rAy8wzHI4p
 

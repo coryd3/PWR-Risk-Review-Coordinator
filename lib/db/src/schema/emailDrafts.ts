@@ -17,6 +17,7 @@ export const emailDraftsTable = pgTable("email_drafts", {
   templateType: text("template_type"),
   toRecipients: text("to_recipients").notNull().default(""),
   ccRecipients: text("cc_recipients").notNull().default(""),
+  fromRecipients: text("from_recipients").notNull().default(""),
   subject: text("subject").notNull().default(""),
   body: text("body").notNull().default(""),
   status: text("status").notNull().default("Draft"),

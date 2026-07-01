@@ -189,6 +189,7 @@ export interface EmailDraft {
   templateType?: string | null;
   toRecipients?: string;
   ccRecipients?: string;
+  fromRecipients?: string;
   subject: string;
   body: string;
   status: string;
@@ -203,6 +204,7 @@ export interface EmailDraft {
 export interface EmailDraftUpdate {
   toRecipients?: string;
   ccRecipients?: string;
+  fromRecipients?: string;
   subject?: string;
   body?: string;
   status?: string;
@@ -569,6 +571,7 @@ export interface CalendarPreviewInput {
 }
 
 export interface CalendarPreview {
+  organizer?: string;
   subject: string;
   body: string;
   requiredAttendees?: string[];
@@ -591,6 +594,16 @@ export interface AttendeeNamedDefault {
   note?: string;
 }
 
+export type EmailRoutingCoordinator = {
+  name: string;
+  email: string;
+};
+
+export interface EmailRouting {
+  mailbox: string;
+  coordinator: EmailRoutingCoordinator;
+}
+
 export interface AppConfig {
   statuses: string[];
   nextActions: string[];
@@ -606,6 +619,7 @@ export interface AppConfig {
   preRiskRequiredRoles: string[];
   preRiskEpcDbbRequiredRoles: string[];
   attendeeNamedDefaults: AttendeeNamedDefault[];
+  emailRouting: EmailRouting;
   requestTypes: string[];
   riskIdentificationStatuses: string[];
   draftStatuses: string[];

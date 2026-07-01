@@ -20,6 +20,8 @@ export * from './classificationResult';
 export * from './dashboardSummary';
 export * from './emailDraft';
 export * from './emailDraftUpdate';
+export * from './emailRouting';
+export * from './emailRoutingCoordinator';
 export * from './emailTemplate';
 export * from './emailTemplateUpdate';
 export * from './error';

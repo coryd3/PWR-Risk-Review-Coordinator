@@ -7,6 +7,7 @@
  */
 
 export interface CalendarPreview {
+  organizer?: string;
   subject: string;
   body: string;
   requiredAttendees?: string[];

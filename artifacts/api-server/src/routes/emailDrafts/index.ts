@@ -39,6 +39,7 @@ router.put(
       .set({
         toRecipients: body.toRecipients ?? current.toRecipients,
         ccRecipients: body.ccRecipients ?? current.ccRecipients,
+        fromRecipients: body.fromRecipients ?? current.fromRecipients,
         subject: body.subject ?? current.subject,
         body: body.body ?? current.body,
         status: body.status ?? current.status,

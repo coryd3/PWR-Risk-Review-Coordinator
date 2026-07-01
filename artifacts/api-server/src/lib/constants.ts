@@ -282,6 +282,21 @@ export const DEFAULT_TIMEZONE = "America/Chicago";
 export const DEFAULT_MEETING_DURATION_MINUTES = 60;
 export const DEFAULT_REMINDER_MINUTES = 15;
 
+// --- Email / calendar routing defaults ---
+// Shared mailbox used as the From address on generated email drafts and as the
+// organizer on Pre-Risk calendar invites. Centralized so one change updates every
+// draft and invite.
+export const RISK_REVIEW_MAILBOX = "PWR-RiskExecReviews@burnsmcd.com";
+
+// The risk review coordinator who must receive every generated draft. Stored as a
+// configurable default (name + email) rather than hardcoded into logic; the packet
+// requires the recipient's name to be visible on the email, and an admin must be
+// able to change who this is without a code edit.
+export const RISK_COORDINATOR_RECIPIENT: { name: string; email: string } = {
+  name: "Megan",
+  email: "",
+};
+
 // ---------------------------------------------------------------------------
 // Usage tracking (value measurement)
 // ---------------------------------------------------------------------------
