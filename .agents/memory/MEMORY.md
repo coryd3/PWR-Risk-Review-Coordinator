@@ -9,3 +9,4 @@
 - [Auth login in preview iframe](replit-auth-iframe-login.md) — OIDC sign-in fails ("invalid auth request") inside the embedded preview; login() opens a top-level tab when framed.
 - [Import validation reasons](import-validation-reasons.md) — unparseable dates block a row as errors; unknown triggers/missing roles/no client warn but still import; keep existing reason substrings.
 - [Policy enforcement server-side](policy-enforcement-server-side.md) — packet scope rules (e.g. Pre-Risk-only calendar) must be guarded in the API route, not just hidden in the UI, or review fails.
+- [Subject-first identity binding](subject-first-identity-binding.md) — sign-in upsert must match by OIDC subject first; claim email invites only when lastLoginAt IS NULL; never auto-merge subjects.

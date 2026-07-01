@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict AOyi7AqjaKMdArxfxrPhUaaDwgMSK2tGpGQPMlsRA4VzUYPzcx2q8rAy8wzHI4p
+\restrict 0kDKloeH1EeGKcBNbtbD280Xh8BPumlNJlt159ncna8LwpcbsiM8Y3dhhb4oqLa
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -551,7 +551,8 @@ CREATE TABLE public.users (
     profile_image_url character varying,
     role character varying DEFAULT 'requester'::character varying NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_login_at timestamp with time zone
 );
 
 
@@ -857,5 +858,5 @@ ALTER TABLE ONLY public.status_history
 -- PostgreSQL database dump complete
 --
 
-\unrestrict AOyi7AqjaKMdArxfxrPhUaaDwgMSK2tGpGQPMlsRA4VzUYPzcx2q8rAy8wzHI4p
+\unrestrict 0kDKloeH1EeGKcBNbtbD280Xh8BPumlNJlt159ncna8LwpcbsiM8Y3dhhb4oqLa
 

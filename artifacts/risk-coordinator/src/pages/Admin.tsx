@@ -8,6 +8,7 @@ import {
   useUpdateRuleSet,
   useListUsers,
   useUpdateUserRole,
+  useCreateUser,
   getListRiskTriggersQueryKey,
   getListEmailTemplatesQueryKey,
   getListRuleSetsQueryKey,
@@ -47,8 +48,17 @@ function UsersAndRoles() {
   const { user: currentUser } = useAuthContext();
   const { data: users, isLoading } = useListUsers();
   const updateRole = useUpdateUserRole();
+  const createUser = useCreateUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [newRole, setNewRole] = useState<AppUserRole>("contributor");
+
+  const refreshUsers = () =>
+    queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
 
   const handleRoleChange = (target: ManagedUser, role: string) => {
     if (role === target.role) return;
@@ -56,11 +66,56 @@ function UsersAndRoles() {
       { id: target.id, data: { role: role as UserRole } },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
+          refreshUsers();
           toast({ title: "Role updated" });
         },
         onError: () =>
           toast({ title: "Failed to update role", variant: "destructive" }),
+      },
+    );
+  };
+
+  const handleAddUser = () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      toast({ title: "Enter an email address", variant: "destructive" });
+      return;
+    }
+    createUser.mutate(
+      {
+        data: {
+          email: trimmedEmail,
+          firstName: firstName.trim() || null,
+          lastName: lastName.trim() || null,
+          role: newRole as UserRole,
+        },
+      },
+      {
+        onSuccess: () => {
+          refreshUsers();
+          toast({
+            title: "User added",
+            description: `${trimmedEmail} will get the ${ROLE_LABELS[newRole]} role the first time they sign in.`,
+          });
+          setEmail("");
+          setFirstName("");
+          setLastName("");
+          setNewRole("contributor");
+        },
+        onError: (err) => {
+          const status = (err as { status?: number })?.status;
+          toast({
+            title:
+              status === 409
+                ? "That email is already added"
+                : "Failed to add user",
+            description:
+              status === 409
+                ? "Change their role in the list below instead."
+                : undefined,
+            variant: "destructive",
+          });
+        },
       },
     );
   };
@@ -73,7 +128,65 @@ function UsersAndRoles() {
       <CardHeader>
         <CardTitle>Users &amp; Roles</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        <div className="rounded-md border bg-muted/30 p-4">
+          <div className="text-sm font-semibold text-foreground">Add a person</div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Anyone can sign in on their own and starts as a Requester. Add someone
+            here to give them an elevated role the moment they first sign in.
+          </p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="space-y-1 sm:col-span-2 lg:col-span-1">
+              <Label className="text-xs">Email</Label>
+              <Input
+                type="email"
+                placeholder="person@burnsmcd.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">First name</Label>
+              <Input
+                placeholder="Optional"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Last name</Label>
+              <Input
+                placeholder="Optional"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Role</Label>
+              <Select
+                value={newRole}
+                onValueChange={(value) => setNewRole(value as AppUserRole)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <Button onClick={handleAddUser} disabled={createUser.isPending}>
+              Add user
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
           <Skeleton className="h-48" />
         ) : (
@@ -84,10 +197,15 @@ function UsersAndRoles() {
                 className="p-3 border rounded-md text-sm flex items-center justify-between gap-3"
               >
                 <div className="min-w-0">
-                  <div className="font-semibold text-foreground truncate">
-                    {displayName(u)}
+                  <div className="font-semibold text-foreground truncate flex items-center gap-2">
+                    <span className="truncate">{displayName(u)}</span>
                     {currentUser?.id === u.id && (
-                      <Badge variant="outline" className="ml-2 text-[10px]">You</Badge>
+                      <Badge variant="outline" className="text-[10px]">You</Badge>
+                    )}
+                    {!u.lastLoginAt && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Pending sign-in
+                      </Badge>
                     )}
                   </div>
                   {u.email && (

@@ -778,7 +778,19 @@ export interface ManagedUser {
   /** @nullable */
   profileImageUrl: string | null;
   role: UserRole;
+  /** @nullable */
+  lastLoginAt: string | null;
   createdAt: string;
+}
+
+export interface NewUser {
+  /** @minLength 1 */
+  email: string;
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  role: UserRole;
 }
 
 export interface UserRoleUpdate {

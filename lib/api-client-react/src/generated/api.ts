@@ -47,6 +47,7 @@ import type {
   MeetingWithRequest,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
+  NewUser,
   NotFoundResponse,
   Note,
   NoteInput,
@@ -2937,6 +2938,76 @@ export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TErr
 
 
 
+
+export const getCreateUserUrl = () => {
+
+
+
+
+  return `/api/users`
+}
+
+/**
+ * @summary Pre-add a user by email and assign a role (admin only)
+ */
+export const createUser = async (newUser: NewUser, options?: RequestInit): Promise<ManagedUser> => {
+
+  return customFetch<ManagedUser>(getCreateUserUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(newUser)
+  }
+);}
+
+
+
+
+export const getCreateUserMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: BodyType<NewUser>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: BodyType<NewUser>}, TContext> => {
+
+const mutationKey = ['createUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUser>>, {data: BodyType<NewUser>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createUser(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateUserMutationResult = NonNullable<Awaited<ReturnType<typeof createUser>>>
+    export type CreateUserMutationBody = BodyType<NewUser>
+    export type CreateUserMutationError = ErrorType<Error>
+
+    /**
+ * @summary Pre-add a user by email and assign a role (admin only)
+ */
+export const useCreateUser = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: BodyType<NewUser>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createUser>>,
+        TError,
+        {data: BodyType<NewUser>},
+        TContext
+      > => {
+      return useMutation(getCreateUserMutationOptions(options));
+    }
 
 export const getUpdateUserRoleUrl = (id: string,) => {
 

@@ -26,6 +26,9 @@ export const usersTable = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role").notNull().default(DEFAULT_USER_ROLE),
+  // Null until the user has signed in at least once. Pre-added ("invited")
+  // users have no login yet; real sign-ins stamp this on every authentication.
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

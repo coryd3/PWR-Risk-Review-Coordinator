@@ -18,5 +18,7 @@ export interface ManagedUser {
   /** @nullable */
   profileImageUrl: string | null;
   role: UserRole;
+  /** @nullable */
+  lastLoginAt: Date | null;
   createdAt: Date;
 }

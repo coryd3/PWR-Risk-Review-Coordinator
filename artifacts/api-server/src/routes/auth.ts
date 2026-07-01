@@ -6,7 +6,7 @@ import {
   ExchangeMobileAuthorizationCodeResponse,
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, usersTable, DEFAULT_USER_ROLE, type UserRole } from "@workspace/db";
 import {
   clearSession,
@@ -61,7 +61,7 @@ function getSafeReturnTo(value: unknown): string {
 async function upsertUser(claims: Record<string, unknown>) {
   const userData = {
     id: claims.sub as string,
-    email: (claims.email as string) || null,
+    email: ((claims.email as string) || "").trim().toLowerCase() || null,
     firstName: (claims.first_name as string) || null,
     lastName: (claims.last_name as string) || null,
     profileImageUrl: (claims.profile_image_url || claims.picture) as
@@ -69,14 +69,104 @@ async function upsertUser(claims: Record<string, unknown>) {
       | null,
   };
 
-  // The very first user to sign in becomes the admin; everyone after them
-  // defaults to the requester role until an admin promotes them. On conflict we
-  // never overwrite an existing user's role. A transaction-scoped advisory lock
-  // makes the "first user" decision atomic so concurrent first sign-ins cannot
-  // each be promoted to admin.
+  // A transaction-scoped advisory lock makes the "first user" decision atomic so
+  // concurrent first sign-ins cannot each be promoted to admin.
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(918273645)`);
 
+    const now = new Date();
+    const subject = userData.id;
+
+    // 1) Returning user — bind by the verified OIDC subject FIRST. Refresh the
+    // profile and stamp the login; the assigned role is never touched here.
+    const [bySubject] = await tx
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, subject));
+    if (bySubject) {
+      // Refresh the email, but never steal one already owned by a different row
+      // (e.g. this may be a collision-created account whose email is null and
+      // whose claim email still belongs to someone else) — that would trip the
+      // unique constraint and break the login.
+      let emailToSet = userData.email;
+      if (emailToSet && emailToSet !== bySubject.email) {
+        const [conflict] = await tx
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.email, emailToSet));
+        if (conflict && conflict.id !== subject) {
+          emailToSet = bySubject.email;
+        }
+      }
+      const [updated] = await tx
+        .update(usersTable)
+        .set({
+          email: emailToSet,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          lastLoginAt: now,
+          updatedAt: now,
+        })
+        .where(eq(usersTable.id, subject))
+        .returning();
+      return updated;
+    }
+
+    // 2) First sign-in for this subject. If an admin pre-added them by email,
+    // claim that invite and permanently bind this subject to it, keeping the
+    // assigned role. We ONLY claim rows that have never signed in
+    // (lastLoginAt IS NULL); a matching email that already belongs to a
+    // signed-in subject is never inherited, so no one can hijack another
+    // person's elevated account by presenting the same email.
+    if (userData.email) {
+      const [byEmail] = await tx
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.email, userData.email));
+      if (byEmail && byEmail.lastLoginAt === null) {
+        const [claimed] = await tx
+          .update(usersTable)
+          .set({
+            id: subject,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            lastLoginAt: now,
+            updatedAt: now,
+          })
+          .where(eq(usersTable.id, byEmail.id))
+          .returning();
+        return claimed;
+      }
+      if (byEmail) {
+        // The email is already bound to a different, previously-signed-in
+        // subject (e.g. a corporate address later reassigned to a new hire).
+        // Do NOT merge or inherit its role: create a fresh, unprivileged
+        // account for this subject, dropping the conflicting email.
+        console.warn(
+          `[auth] email ${userData.email} already bound to another subject; ` +
+            `creating a separate default account for subject ${subject}`,
+        );
+        const [user] = await tx
+          .insert(usersTable)
+          .values({
+            id: subject,
+            email: null,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            role: DEFAULT_USER_ROLE,
+            lastLoginAt: now,
+          })
+          .returning();
+        return user;
+      }
+    }
+
+    // 3) Brand-new user with no matching invite: the very first person ever to
+    // sign in becomes the admin; everyone after them defaults to the requester
+    // role until an admin elevates them.
     const [{ total }] = await tx
       .select({ total: sql<number>`cast(count(*) as int)` })
       .from(usersTable);
@@ -84,14 +174,7 @@ async function upsertUser(claims: Record<string, unknown>) {
 
     const [user] = await tx
       .insert(usersTable)
-      .values({ ...userData, role: initialRole })
-      .onConflictDoUpdate({
-        target: usersTable.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
+      .values({ ...userData, role: initialRole, lastLoginAt: now })
       .returning();
     return user;
   });

@@ -1184,9 +1184,39 @@ export const ListUsersResponseItem = zod.object({
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
   "role": zod.enum(['admin', 'contributor', 'viewer', 'requester']),
+  "lastLoginAt": zod.coerce.date().nullable(),
   "createdAt": zod.coerce.date()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
+
+
+/**
+ * @summary Pre-add a user by email and assign a role (admin only)
+ */
+export const CreateUserHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+
+
+export const CreateUserBody = zod.object({
+  "email": zod.string().email().min(1),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "role": zod.enum(['admin', 'contributor', 'viewer', 'requester'])
+})
+
+export const CreateUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string().email().nullable(),
+  "firstName": zod.string().nullable(),
+  "lastName": zod.string().nullable(),
+  "profileImageUrl": zod.string().nullable(),
+  "role": zod.enum(['admin', 'contributor', 'viewer', 'requester']),
+  "lastLoginAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})
 
 
 /**
@@ -1211,6 +1241,7 @@ export const UpdateUserRoleResponse = zod.object({
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
   "role": zod.enum(['admin', 'contributor', 'viewer', 'requester']),
+  "lastLoginAt": zod.coerce.date().nullable(),
   "createdAt": zod.coerce.date()
 })
 

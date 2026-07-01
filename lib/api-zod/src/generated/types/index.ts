@@ -42,6 +42,7 @@ export * from './meetingUpdate';
 export * from './meetingWithRequest';
 export * from './mobileTokenExchangeRequest';
 export * from './mobileTokenExchangeSuccess';
+export * from './newUser';
 export * from './note';
 export * from './noteInput';
 export * from './notFoundResponse';

@@ -767,6 +767,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    post:
+      tags: [users]
+      operationId: createUser
+      summary: Pre-add a user by email and assign a role (admin only)
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagedUser'
+        '400':
+          description: Invalid user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: A user with this email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /users/{id}/role:
     patch:
       tags: [users]
@@ -2094,7 +2138,7 @@ components:
             - type: 'null'
     ManagedUser:
       type: object
-      required: [id, email, firstName, lastName, profileImageUrl, role, createdAt]
+      required: [id, email, firstName, lastName, profileImageUrl, role, lastLoginAt, createdAt]
       properties:
         id:
           type: string
@@ -2109,9 +2153,26 @@ components:
           type: [string, 'null']
         role:
           $ref: '#/components/schemas/UserRole'
+        lastLoginAt:
+          type: [string, 'null']
+          format: date-time
         createdAt:
           type: string
           format: date-time
+    NewUser:
+      type: object
+      required: [email, role]
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        firstName:
+          type: [string, 'null']
+        lastName:
+          type: [string, 'null']
+        role:
+          $ref: '#/components/schemas/UserRole'
     UserRoleUpdate:
       type: object
       required: [role]
