@@ -642,6 +642,37 @@ export interface UsageSummary {
   byMonth: UsageMonthSummary[];
 }
 
+export type ImportOutcomeResult = typeof ImportOutcomeResult[keyof typeof ImportOutcomeResult];
+
+
+export const ImportOutcomeResult = {
+  imported: 'imported',
+  skipped: 'skipped',
+  error: 'error',
+} as const;
+
+export interface ImportOutcome {
+  rowNumber: number;
+  label: string;
+  result: ImportOutcomeResult;
+  reason?: string;
+}
+
+export interface ImportSummary {
+  sourceFile: string;
+  dryRun: boolean;
+  rowsRead: number;
+  imported: number;
+  skipped: number;
+  errored: number;
+  outcomes: ImportOutcome[];
+}
+
+export interface TrackerUpload {
+  /** The tracker spreadsheet (.xlsx, .xls, or .csv). */
+  file: Blob;
+}
+
 /**
  * Resource not found
  */
@@ -649,5 +680,12 @@ export type NotFoundResponse = Error;
 
 export type ListUsageEventsParams = {
 limit?: number;
+};
+
+export type ImportTrackerParams = {
+/**
+ * When true, classify and report without writing any data.
+ */
+dryRun?: boolean;
 };
 

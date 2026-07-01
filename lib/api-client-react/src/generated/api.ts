@@ -29,8 +29,11 @@ import type {
   EmailDraftUpdate,
   EmailTemplate,
   EmailTemplateUpdate,
+  Error,
   GenerateDraftsInput,
   HealthStatus,
+  ImportSummary,
+  ImportTrackerParams,
   ListUsageEventsParams,
   Meeting,
   MeetingInput,
@@ -50,6 +53,7 @@ import type {
   RuleSetUpdate,
   StatusChangeInput,
   StatusHistoryEntry,
+  TrackerUpload,
   UsageEvent,
   UsageSummary
 } from './api.schemas';
@@ -2304,4 +2308,85 @@ export function useGetUsageSummary<TData = Awaited<ReturnType<typeof getUsageSum
 
 
 
+
+export const getImportTrackerUrl = (params?: ImportTrackerParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/import/tracker?${stringifiedParams}` : `/api/import/tracker`
+}
+
+/**
+ * Upload a legacy .xlsx/.xls/.csv tracker export and run the same staging and import logic as the CLI importer. Use dryRun=true to preview what would be imported without writing any data.
+ * @summary Import the legacy risk-review tracker spreadsheet
+ */
+export const importTracker = async (trackerUpload: TrackerUpload,
+    params?: ImportTrackerParams, options?: RequestInit): Promise<ImportSummary> => {
+    const formData = new FormData();
+formData.append(`file`, trackerUpload.file);
+
+  return customFetch<ImportSummary>(getImportTrackerUrl(params),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+export const getImportTrackerMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importTracker>>, TError,{data: BodyType<TrackerUpload>;params?: ImportTrackerParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importTracker>>, TError,{data: BodyType<TrackerUpload>;params?: ImportTrackerParams}, TContext> => {
+
+const mutationKey = ['importTracker'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importTracker>>, {data: BodyType<TrackerUpload>;params?: ImportTrackerParams}> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  importTracker(data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportTrackerMutationResult = NonNullable<Awaited<ReturnType<typeof importTracker>>>
+    export type ImportTrackerMutationBody = BodyType<TrackerUpload>
+    export type ImportTrackerMutationError = ErrorType<Error>
+
+    /**
+ * @summary Import the legacy risk-review tracker spreadsheet
+ */
+export const useImportTracker = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importTracker>>, TError,{data: BodyType<TrackerUpload>;params?: ImportTrackerParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importTracker>>,
+        TError,
+        {data: BodyType<TrackerUpload>;params?: ImportTrackerParams},
+        TContext
+      > => {
+      return useMutation(getImportTrackerMutationOptions(options));
+    }
 

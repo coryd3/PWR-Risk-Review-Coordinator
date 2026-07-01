@@ -5,6 +5,7 @@ import meetingsRouter from "./meetings";
 import emailDraftsRouter from "./emailDrafts";
 import configRouter from "./config";
 import usageRouter from "./usage";
+import importRouter from "./import";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(meetingsRouter);
 router.use(emailDraftsRouter);
 router.use(configRouter);
 router.use(usageRouter);
+router.use(importRouter);
 
 export default router;

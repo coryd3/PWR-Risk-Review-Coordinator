@@ -22,7 +22,7 @@ import {
   pickString,
   resolveTriggers,
   splitList,
-} from "./tracker-normalize";
+} from "@workspace/tracker-import";
 
 function trigger(
   id: number,

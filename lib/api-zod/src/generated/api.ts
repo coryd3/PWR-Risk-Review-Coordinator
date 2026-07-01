@@ -996,3 +996,33 @@ export const GetUsageSummaryResponse = zod.object({
 })
 
 
+/**
+ * Upload a legacy .xlsx/.xls/.csv tracker export and run the same staging and import logic as the CLI importer. Use dryRun=true to preview what would be imported without writing any data.
+ * @summary Import the legacy risk-review tracker spreadsheet
+ */
+export const importTrackerQueryDryRunDefault = false;
+
+export const ImportTrackerQueryParams = zod.object({
+  "dryRun": zod.coerce.boolean().default(importTrackerQueryDryRunDefault).describe('When true, classify and report without writing any data.')
+})
+
+export const ImportTrackerBody = zod.object({
+  "file": zod.instanceof(File).describe('The tracker spreadsheet (.xlsx, .xls, or .csv).')
+})
+
+export const ImportTrackerResponse = zod.object({
+  "sourceFile": zod.string(),
+  "dryRun": zod.boolean(),
+  "rowsRead": zod.number(),
+  "imported": zod.number(),
+  "skipped": zod.number(),
+  "errored": zod.number(),
+  "outcomes": zod.array(zod.object({
+  "rowNumber": zod.number(),
+  "label": zod.string(),
+  "result": zod.enum(['imported', 'skipped', 'error']),
+  "reason": zod.string().optional()
+}))
+})
+
+

@@ -10,8 +10,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as XLSX from "xlsx";
 import type { RiskTriggerRow } from "@workspace/db";
-import { hashRow, type RawRow } from "./tracker-normalize";
-import { planRow, type PlanDeps } from "./tracker-plan";
+import { hashRow, type RawRow } from "@workspace/tracker-import";
+import { planRow, type PlanDeps } from "@workspace/tracker-import";
 
 function trigger(
   id: number,

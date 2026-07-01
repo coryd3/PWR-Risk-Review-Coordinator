@@ -580,6 +580,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/UsageSummary"
 
+  /import/tracker:
+    post:
+      operationId: importTracker
+      tags: [config]
+      summary: Import the legacy risk-review tracker spreadsheet
+      description: >
+        Upload a legacy .xlsx/.xls/.csv tracker export and run the same staging
+        and import logic as the CLI importer. Use dryRun=true to preview what
+        would be imported without writing any data.
+      parameters:
+        - name: dryRun
+          in: query
+          required: false
+          description: When true, classify and report without writing any data.
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/TrackerUpload"
+      responses:
+        "200":
+          description: Import summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportSummary"
+        "400":
+          description: Invalid upload or unreadable file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   parameters:
     RequestId:
@@ -1642,3 +1679,61 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UsageMonthSummary"
+
+    ImportOutcome:
+      type: object
+      required:
+        - rowNumber
+        - label
+        - result
+      properties:
+        rowNumber:
+          type: integer
+        label:
+          type: string
+        result:
+          type: string
+          enum:
+            - imported
+            - skipped
+            - error
+        reason:
+          type: string
+
+    ImportSummary:
+      type: object
+      required:
+        - sourceFile
+        - dryRun
+        - rowsRead
+        - imported
+        - skipped
+        - errored
+        - outcomes
+      properties:
+        sourceFile:
+          type: string
+        dryRun:
+          type: boolean
+        rowsRead:
+          type: integer
+        imported:
+          type: integer
+        skipped:
+          type: integer
+        errored:
+          type: integer
+        outcomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportOutcome"
+
+    TrackerUpload:
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          type: string
+          format: binary
+          description: The tracker spreadsheet (.xlsx, .xls, or .csv).

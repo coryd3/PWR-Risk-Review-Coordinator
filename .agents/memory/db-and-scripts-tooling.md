@@ -5,6 +5,7 @@ description: Non-obvious gotchas for changing the Drizzle schema and writing sta
 
 # Schema changes
 - Apply schema changes with `pnpm --filter @workspace/db run push` (drizzle-kit push) and then regenerate the portable snapshot with `pg_dump --schema-only --no-owner --no-privileges "$DATABASE_URL" > db/schema.sql`.
+- The dev DB can silently drift from the Drizzle schema (e.g. `imported_tracker_rows` existed with only 4 of its 10 columns), surfacing as runtime "Failed query: select ... $1" errors from the API, not a startup error. If a table's query fails, diff `information_schema.columns` against the schema file and run `pnpm run db:migrate` (push) to reconcile.
 - `pnpm --filter @workspace/db run generate` is BROKEN: `drizzle.config.ts` sets `out` to an absolute path via `path.join(__dirname, ...)`, and drizzle-kit prepends `./` to the stored snapshot path, producing `.//home/...` (ENOENT). Don't rely on generate for incremental migrations.
 - **Why:** runtime uses `push` (see root `db:migrate`), not the `db/migrations/*.sql` files, so a broken generate doesn't block the app — but you must hand-update `db/schema.sql` to keep the portable snapshot truthful.
 

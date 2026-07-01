@@ -11,11 +11,11 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "tsx": "catalog:"
+    "tsx": "catalog:",
+    "xlsx": "^0.18.5"
   },
   "dependencies": {
     "@workspace/db": "workspace:*",
-    "drizzle-orm": "catalog:",
-    "xlsx": "^0.18.5"
+    "@workspace/tracker-import": "workspace:*"
   }
 }
