@@ -1678,6 +1678,20 @@ components:
         teamsLink:
           type: string
 
+    AttendeeNamedDefault:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+        defaultName:
+          type: string
+        email:
+          type: string
+        note:
+          type: string
+
     AppConfig:
       type: object
       required:
@@ -1689,9 +1703,12 @@ components:
         - meetingTypes
         - meetingStatuses
         - attendeeRoles
-        - epcPrimeRoles
-        - standardRoles
         - requiredAttendeeRoles
+        - formalFinalRequiredRoles
+        - formalFinalEpcRequiredRoles
+        - preRiskRequiredRoles
+        - preRiskEpcDbbRequiredRoles
+        - attendeeNamedDefaults
         - requestTypes
         - riskIdentificationStatuses
         - draftStatuses
@@ -1729,18 +1746,30 @@ components:
           type: array
           items:
             type: string
-        epcPrimeRoles:
-          type: array
-          items:
-            type: string
-        standardRoles:
-          type: array
-          items:
-            type: string
         requiredAttendeeRoles:
           type: array
           items:
             type: string
+        formalFinalRequiredRoles:
+          type: array
+          items:
+            type: string
+        formalFinalEpcRequiredRoles:
+          type: array
+          items:
+            type: string
+        preRiskRequiredRoles:
+          type: array
+          items:
+            type: string
+        preRiskEpcDbbRequiredRoles:
+          type: array
+          items:
+            type: string
+        attendeeNamedDefaults:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendeeNamedDefault'
         requestTypes:
           type: array
           items:

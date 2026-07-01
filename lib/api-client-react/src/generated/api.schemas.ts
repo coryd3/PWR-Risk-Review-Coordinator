@@ -584,6 +584,13 @@ export interface CalendarPreview {
   teamsLink?: string;
 }
 
+export interface AttendeeNamedDefault {
+  role: string;
+  defaultName?: string;
+  email?: string;
+  note?: string;
+}
+
 export interface AppConfig {
   statuses: string[];
   nextActions: string[];
@@ -593,9 +600,12 @@ export interface AppConfig {
   meetingTypes: string[];
   meetingStatuses: string[];
   attendeeRoles: string[];
-  epcPrimeRoles: string[];
-  standardRoles: string[];
   requiredAttendeeRoles: string[];
+  formalFinalRequiredRoles: string[];
+  formalFinalEpcRequiredRoles: string[];
+  preRiskRequiredRoles: string[];
+  preRiskEpcDbbRequiredRoles: string[];
+  attendeeNamedDefaults: AttendeeNamedDefault[];
   requestTypes: string[];
   riskIdentificationStatuses: string[];
   draftStatuses: string[];

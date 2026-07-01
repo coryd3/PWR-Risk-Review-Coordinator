@@ -5,6 +5,7 @@
  * PWR Risk Review Coordinator API
  * OpenAPI spec version: 0.1.0
  */
+import type { AttendeeNamedDefault } from './attendeeNamedDefault';
 
 export interface AppConfig {
   statuses: string[];
@@ -15,9 +16,12 @@ export interface AppConfig {
   meetingTypes: string[];
   meetingStatuses: string[];
   attendeeRoles: string[];
-  epcPrimeRoles: string[];
-  standardRoles: string[];
   requiredAttendeeRoles: string[];
+  formalFinalRequiredRoles: string[];
+  formalFinalEpcRequiredRoles: string[];
+  preRiskRequiredRoles: string[];
+  preRiskEpcDbbRequiredRoles: string[];
+  attendeeNamedDefaults: AttendeeNamedDefault[];
   requestTypes: string[];
   riskIdentificationStatuses: string[];
   draftStatuses: string[];

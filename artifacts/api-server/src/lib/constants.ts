@@ -77,48 +77,177 @@ export const REGIONS = ["KC", "Non-KC"] as const;
 // Major-opportunity thresholds (USD).
 export const MAJOR_FEE_THRESHOLD_USD = 10_000_000;
 export const MAJOR_DBB_TIC_THRESHOLD_USD = 50_000_000;
+// President of Construction is an optional attendee only when the project is EPC
+// and its Total Installed Cost exceeds this threshold (validated packet).
+export const EPC_PRESIDENT_TIC_THRESHOLD_USD = 30_000_000;
 
-export const EPC_PRIME_ROLES = [
-  "Business-Line Director",
-  "Business Line CDB Operations Manager",
-  "Project Manager",
-  "Engineering Manager",
-  "Construction Manager",
-  "Self-Perform PM",
-  "Biz Develop/Capture Manager",
-  "Executive-in-Charge",
-  "Contract Review Request RVW #",
-  "Attorney",
-  "Regional GP Manager",
-  "Regional Risk Manager",
-  "Other Attendees",
-] as const;
+// ---------------------------------------------------------------------------
+// Attendee matrix (validated packet)
+// ---------------------------------------------------------------------------
+// The required/optional attendee set differs by meeting (Pre-Risk vs
+// Formal/Final Risk), delivery method (EPC vs DBB), Major-opportunity status,
+// and business line (Solar/BESS add distribution mailboxes).
+//
+// Named individuals are intentionally stored as configurable DEFAULTS on each
+// rule (defaultName / email) rather than hardcoded into templates or logic. The
+// packet explicitly warns against hardcoding attendee names, so an admin can
+// maintain these without a code change.
+// TODO: move these rules into the rule_sets table for full Admin editing.
 
-// Standard (non-EPC-prime) attendee roles. The spec does not enumerate a
-// separate reduced list, so this is a sensible default subset.
-// TODO: make configurable via the static attendee rules in Admin.
-export const STANDARD_ROLES = [
-  "Business-Line Director",
-  "Project Manager",
-  "Biz Develop/Capture Manager",
-  "Attorney",
-  "Regional Risk Manager",
-  "Other Attendees",
-] as const;
+export interface AttendeeRule {
+  // Canonical role label. Also drives the attendee role dropdown and the
+  // required-attendee warnings, so labels must stay stable.
+  role: string;
+  // Packet-provided default individual for this seat, if any. Configurable.
+  defaultName?: string;
+  // Distribution mailbox for "mailbox" seats (e.g. business-line distros).
+  email?: string;
+  // Applicability note (e.g. "if applicable", threshold conditions). Rules with
+  // a note are conditional and are NOT flagged as missing by warnings.
+  note?: string;
+}
 
-export const ATTENDEE_ROLES = EPC_PRIME_ROLES;
+// Required for every Formal & Final Risk Review.
+export const FORMAL_FINAL_REQUIRED: AttendeeRule[] = [
+  { role: "Formal Risk Coordinator" },
+  { role: "PWR Risk Coordinator" },
+  { role: "Executive-in-Charge" },
+  { role: "Business-Line Director" },
+  { role: "Biz Develop/Capture Manager" },
+  { role: "Project Manager" },
+  { role: "Engineering Manager" },
+  { role: "Attorney" },
+];
 
-// Roles that must exist on every request and be populated with a name. These
-// are enforced in the request form (pre-seeded, non-removable, name required)
-// and flagged by computeWarnings when missing.
-export const REQUIRED_ATTENDEE_ROLES = [
-  "Business-Line Director",
-  "Project Manager",
-  "Engineering Manager",
-  "Biz Develop/Capture Manager",
-  "Executive-in-Charge",
-  "Attorney",
-] as const;
+// Additional required attendees for EPC Formal & Final Risk Reviews.
+export const FORMAL_FINAL_EPC_REQUIRED: AttendeeRule[] = [
+  { role: "CDB Operations Executive", defaultName: "Matt Ralston or Chad Cotter" },
+  { role: "Business Line CDB Operations Manager" },
+  { role: "Construction Manager", note: "if applicable" },
+  { role: "Self-Perform Construction Lead", note: "if applicable" },
+];
+
+// Additional required attendees for DBB Formal & Final Risk Reviews.
+export const FORMAL_FINAL_DBB_REQUIRED: AttendeeRule[] = [
+  { role: "Construction Manager", note: "if applicable" },
+  { role: "Self-Perform Construction Lead", note: "if applicable" },
+];
+
+// Optional for all Formal & Final Risk Reviews.
+export const FORMAL_FINAL_OPTIONAL: AttendeeRule[] = [
+  { role: "Regional GP Manager", note: "if applicable" },
+  { role: "Regional Risk Manager", note: "if applicable" },
+  { role: "PWR Risk Admin", email: "PWR-RiskExecReviews@burnsmcd.com" },
+];
+
+// Optional for Major-opportunity Formal & Final Risk Reviews.
+export const FORMAL_FINAL_MAJOR_OPTIONAL: AttendeeRule[] = [
+  { role: "Senior VP & General Manager, PWR", defaultName: "Scott Strawn" },
+  { role: "Vice President, Operations", defaultName: "Travis Fucich" },
+  { role: "PWR Lead Risk Coordinator", defaultName: "Chris Hamker" },
+  { role: "SVP, Energy", defaultName: "Ed Anello & Joe Podrebarac" },
+  { role: "COO, Energy", defaultName: "Paul Fischer" },
+  { role: "Insurance" },
+];
+
+// Optional for EPC or DBB Formal & Final Risk Reviews.
+export const FORMAL_FINAL_EPC_DBB_OPTIONAL: AttendeeRule[] = [
+  {
+    role: "Senior VP of Self-Perform Construction",
+    defaultName: "Jeff Allen",
+    note: "if applicable",
+  },
+  {
+    role: "President of Construction",
+    defaultName: "Brett Williams",
+    note: "only if EPC TIC > $30M",
+  },
+  {
+    role: "CDB Operations Executive",
+    defaultName: "Matt Ralston or Chad Cotter",
+    note: "only if EPC - opposite of the required seat",
+  },
+  {
+    role: "Facility Security Director",
+    defaultName: "RJ Hope",
+    note: "only if EPC",
+  },
+];
+
+// Required for every PWR Pre-Risk Review.
+export const PRE_RISK_REQUIRED: AttendeeRule[] = [
+  { role: "Business-Line Director" },
+  { role: "Project Manager" },
+  { role: "Engineering Manager" },
+  { role: "Construction Manager", note: "if applicable" },
+];
+
+// Additional required attendees for EPC & DBB PWR Pre-Risk Reviews.
+export const PRE_RISK_EPC_DBB_REQUIRED: AttendeeRule[] = [
+  { role: "CDB Operations Manager" },
+  { role: "Self-Perform PM", note: "if applicable" },
+];
+
+// Optional for all PWR Pre-Risk Reviews.
+export const PRE_RISK_OPTIONAL: AttendeeRule[] = [
+  { role: "Executive-in-Charge" },
+  { role: "Biz Develop/Capture Manager" },
+  { role: "Attorney" },
+  { role: "Regional GP Manager", note: "if applicable" },
+  { role: "Regional Risk Manager", note: "if applicable" },
+  { role: "PWR Lead Risk Coordinator", defaultName: "Chris Hamker" },
+  { role: "PWR Risk Admin", email: "PWR-RiskExecReviews@burnsmcd.com" },
+  { role: "Other Attendees" },
+];
+
+// Business-line distribution mailboxes. Added to the optional recipients when
+// the request's business line and delivery method match.
+export const BUSINESS_LINE_DISTRIBUTIONS = {
+  solarEpcDbb: "PWR-RiskSolarEPC@burnsmcd.com",
+  bessEpcDbb: "PWR-RiskBESSEPC@burnsmcd.com",
+  solarNonEpc: "PWR-RiskSolar@burnsmcd.com",
+  bessNonEpc: "PWR-RiskBESS@burnsmcd.com",
+} as const;
+
+// Union of every role that can appear on a request, used for the attendee role
+// dropdown. Derived from the matrix so it stays a single source of truth, with
+// a couple of legacy roles appended.
+const MATRIX_GROUPS: AttendeeRule[][] = [
+  FORMAL_FINAL_REQUIRED,
+  FORMAL_FINAL_EPC_REQUIRED,
+  FORMAL_FINAL_DBB_REQUIRED,
+  FORMAL_FINAL_OPTIONAL,
+  FORMAL_FINAL_MAJOR_OPTIONAL,
+  FORMAL_FINAL_EPC_DBB_OPTIONAL,
+  PRE_RISK_REQUIRED,
+  PRE_RISK_EPC_DBB_REQUIRED,
+  PRE_RISK_OPTIONAL,
+];
+
+export const ATTENDEE_ROLES: string[] = (() => {
+  const seen = new Set<string>();
+  const roles: string[] = [];
+  for (const group of MATRIX_GROUPS) {
+    for (const rule of group) {
+      if (!seen.has(rule.role)) {
+        seen.add(rule.role);
+        roles.push(rule.role);
+      }
+    }
+  }
+  for (const legacy of ["Contract Review Request RVW #"]) {
+    if (!seen.has(legacy)) {
+      seen.add(legacy);
+      roles.push(legacy);
+    }
+  }
+  return roles;
+})();
+
+// Mandatory roles (excluding "if applicable" conditionals) that computeWarnings
+// flags as missing. Kept as a flat baseline for the two request types; the
+// actual per-request set is assembled in rules.getRequiredRoles.
+export const REQUIRED_ATTENDEE_ROLES = FORMAL_FINAL_REQUIRED.map((r) => r.role);
 
 export const REQUEST_TYPES = [
   "Pre-Risk & Formal Risk Discussion",

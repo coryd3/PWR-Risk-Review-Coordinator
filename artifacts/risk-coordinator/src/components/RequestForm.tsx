@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useGetConfig, useListRiskTriggers, useCreateRequest, useUpdateRequest, getGetRequestQueryKey, getListRequestsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";

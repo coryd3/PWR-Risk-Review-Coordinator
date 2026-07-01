@@ -9,6 +9,7 @@
 export * from './appConfig';
 export * from './attendee';
 export * from './attendeeInput';
+export * from './attendeeNamedDefault';
 export * from './authorizationSessionHeaderParameter';
 export * from './authUser';
 export * from './authUserEnvelope';

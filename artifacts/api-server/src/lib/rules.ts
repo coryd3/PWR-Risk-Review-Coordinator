@@ -6,14 +6,49 @@ import type {
   AttendeeRow,
 } from "@workspace/db";
 import {
-  REQUIRED_ATTENDEE_ROLES,
   MAJOR_FEE_THRESHOLD_USD,
   MAJOR_DBB_TIC_THRESHOLD_USD,
+  EPC_PRESIDENT_TIC_THRESHOLD_USD,
+  FORMAL_FINAL_REQUIRED,
+  FORMAL_FINAL_EPC_REQUIRED,
+  FORMAL_FINAL_DBB_REQUIRED,
+  FORMAL_FINAL_OPTIONAL,
+  FORMAL_FINAL_MAJOR_OPTIONAL,
+  FORMAL_FINAL_EPC_DBB_OPTIONAL,
+  PRE_RISK_REQUIRED,
+  PRE_RISK_EPC_DBB_REQUIRED,
+  PRE_RISK_OPTIONAL,
+  BUSINESS_LINE_DISTRIBUTIONS,
+  type AttendeeRule,
 } from "./constants";
 
 export interface ValidationWarning {
   code: string;
   message: string;
+}
+
+// Delivery-method classification shared by Major logic and the attendee matrix.
+export interface DeliveryClass {
+  isEpc: boolean;
+  isDbb: boolean;
+  isProfessionalServices: boolean;
+}
+
+export function classifyDelivery(
+  request: Pick<RiskReviewRequestRow, "deliveryMethod" | "isEpcPrime">,
+): DeliveryClass {
+  const method = (request.deliveryMethod ?? "").toLowerCase();
+  const isEpc =
+    Boolean(request.isEpcPrime) ||
+    method.includes("epc") ||
+    method.includes("design-build") ||
+    method.includes("design build");
+  const isDbb =
+    method.includes("bid-build") ||
+    method.includes("bid build") ||
+    method.includes("dbb");
+  const isProfessionalServices = method.includes("professional");
+  return { isEpc, isDbb, isProfessionalServices };
 }
 
 // Major-opportunity classification (validated packet logic):
@@ -32,22 +67,11 @@ export function classifyMajor(
   >,
   triggers: Pick<RiskTriggerRow, "triggerNumber" | "isMajorOpportunityTrigger">[],
 ): boolean {
-  const method = (request.deliveryMethod ?? "").toLowerCase();
   const fee = request.bmcdContractValueNumeric ?? 0;
   const tic = request.totalInstalledCostNumeric ?? 0;
+  const { isEpc, isDbb, isProfessionalServices } = classifyDelivery(request);
 
-  const isEpcOrDb =
-    request.isEpcPrime ||
-    method.includes("epc") ||
-    method.includes("design-build") ||
-    method.includes("design build");
-  const isDbb =
-    method.includes("bid-build") ||
-    method.includes("bid build") ||
-    method.includes("dbb");
-  const isProfessionalServices = method.includes("professional");
-
-  if ((isEpcOrDb || isProfessionalServices) && fee > MAJOR_FEE_THRESHOLD_USD) {
+  if ((isEpc || isProfessionalServices) && fee > MAJOR_FEE_THRESHOLD_USD) {
     return true;
   }
   if (isDbb && tic > MAJOR_DBB_TIC_THRESHOLD_USD) {
@@ -183,7 +207,7 @@ export function computeWarnings(
     });
   }
 
-  const requiredRoles = getRequiredRoles(request.isEpcPrime);
+  const requiredRoles = getRequiredRoles(request);
   const missingRoles = requiredRoles.filter(
     (role) => !hasNamedAttendee(attendees, role),
   );
@@ -211,8 +235,130 @@ export function computeWarnings(
   return warnings;
 }
 
-// Required roles whose absence triggers a warning. These must exist on every
-// request and be populated with a name, regardless of EPC-prime status.
-function getRequiredRoles(_isEpcPrime: boolean): string[] {
-  return [...REQUIRED_ATTENDEE_ROLES];
+// Which meeting stages a request needs, derived from its request type.
+export function requestNeedsPreRisk(
+  request: Pick<RiskReviewRequestRow, "requestType">,
+): boolean {
+  return (request.requestType ?? "").toLowerCase().includes("pre-risk");
+}
+
+export function requestNeedsFormalOrFinal(
+  request: Pick<RiskReviewRequestRow, "requestType">,
+): boolean {
+  const t = (request.requestType ?? "").toLowerCase();
+  return t.includes("formal risk") || t.includes("final risk");
+}
+
+// Dedupe attendee rules by role, keeping the first occurrence (so a required
+// seat wins over a later optional/conditional seat for the same role).
+function dedupeRules(rules: AttendeeRule[]): AttendeeRule[] {
+  const seen = new Set<string>();
+  const out: AttendeeRule[] = [];
+  for (const rule of rules) {
+    if (!seen.has(rule.role)) {
+      seen.add(rule.role);
+      out.push(rule);
+    }
+  }
+  return out;
+}
+
+export interface AttendeeMatrix {
+  required: AttendeeRule[];
+  optional: AttendeeRule[];
+  distributionEmails: string[];
+}
+
+// Assemble the full required/optional/distribution attendee set for a request
+// from the validated packet matrix. Delivery method (EPC/DBB), Major status, and
+// business line all shift the set.
+export function computeAttendeeMatrix(
+  request: Pick<
+    RiskReviewRequestRow,
+    | "requestType"
+    | "deliveryMethod"
+    | "isEpcPrime"
+    | "isMajorOpportunity"
+    | "totalInstalledCostNumeric"
+    | "businessLines"
+  >,
+  triggers: Pick<RiskTriggerRow, "isMajorOpportunityTrigger">[] = [],
+): AttendeeMatrix {
+  const { isEpc, isDbb } = classifyDelivery(request);
+  const needsPreRisk = requestNeedsPreRisk(request);
+  const needsFormalOrFinal = requestNeedsFormalOrFinal(request);
+  const isMajor =
+    Boolean(request.isMajorOpportunity) ||
+    triggers.some((t) => t.isMajorOpportunityTrigger);
+  const tic = request.totalInstalledCostNumeric ?? 0;
+
+  const lines = (request.businessLines ?? []).map((b) => b.toLowerCase());
+  const hasSolar = lines.some((b) => b.includes("solar"));
+  const hasBess = lines.some((b) => b.includes("bess"));
+
+  const required: AttendeeRule[] = [];
+  const optional: AttendeeRule[] = [];
+  const distributionEmails: string[] = [];
+
+  if (needsFormalOrFinal) {
+    required.push(...FORMAL_FINAL_REQUIRED);
+    if (isEpc) required.push(...FORMAL_FINAL_EPC_REQUIRED);
+    if (isDbb) required.push(...FORMAL_FINAL_DBB_REQUIRED);
+
+    optional.push(...FORMAL_FINAL_OPTIONAL);
+    if (isMajor) optional.push(...FORMAL_FINAL_MAJOR_OPTIONAL);
+    if (isEpc || isDbb) {
+      for (const rule of FORMAL_FINAL_EPC_DBB_OPTIONAL) {
+        if (rule.role === "President of Construction" && !(isEpc && tic > EPC_PRESIDENT_TIC_THRESHOLD_USD)) {
+          continue;
+        }
+        if (rule.role === "Facility Security Director" && !isEpc) continue;
+        optional.push(rule);
+      }
+      if (isEpc || isDbb) {
+        if (hasSolar) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.solarEpcDbb);
+        if (hasBess) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.bessEpcDbb);
+      }
+    }
+  }
+
+  if (needsPreRisk) {
+    required.push(...PRE_RISK_REQUIRED);
+    if (isEpc || isDbb) required.push(...PRE_RISK_EPC_DBB_REQUIRED);
+
+    optional.push(...PRE_RISK_OPTIONAL);
+    if (hasSolar) {
+      if (!isEpc) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.solarNonEpc);
+      if (isEpc || isDbb) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.solarEpcDbb);
+    }
+    if (hasBess) {
+      if (!isEpc) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.bessNonEpc);
+      if (isEpc || isDbb) distributionEmails.push(BUSINESS_LINE_DISTRIBUTIONS.bessEpcDbb);
+    }
+  }
+
+  return {
+    required: dedupeRules(required),
+    optional: dedupeRules(optional),
+    distributionEmails: [...new Set(distributionEmails)],
+  };
+}
+
+// Mandatory roles (excluding "if applicable" conditionals) whose absence is
+// flagged by computeWarnings. Assembled from the attendee matrix for the
+// request's meeting stages and delivery method.
+export function getRequiredRoles(
+  request: Pick<
+    RiskReviewRequestRow,
+    | "requestType"
+    | "deliveryMethod"
+    | "isEpcPrime"
+    | "isMajorOpportunity"
+    | "totalInstalledCostNumeric"
+    | "businessLines"
+  >,
+): string[] {
+  return computeAttendeeMatrix(request)
+    .required.filter((rule) => rule.note == null)
+    .map((rule) => rule.role);
 }

@@ -27,14 +27,53 @@ import {
   MEETING_TYPES,
   MEETING_STATUSES,
   ATTENDEE_ROLES,
-  EPC_PRIME_ROLES,
-  STANDARD_ROLES,
   REQUIRED_ATTENDEE_ROLES,
   REQUEST_TYPES,
   RISK_IDENTIFICATION_STATUSES,
   DRAFT_STATUSES,
   TEMPLATE_TYPES,
+  FORMAL_FINAL_REQUIRED,
+  FORMAL_FINAL_EPC_REQUIRED,
+  FORMAL_FINAL_DBB_REQUIRED,
+  FORMAL_FINAL_OPTIONAL,
+  FORMAL_FINAL_MAJOR_OPTIONAL,
+  FORMAL_FINAL_EPC_DBB_OPTIONAL,
+  PRE_RISK_REQUIRED,
+  PRE_RISK_EPC_DBB_REQUIRED,
+  PRE_RISK_OPTIONAL,
+  type AttendeeRule,
 } from "../../lib/constants";
+
+// Mandatory roles (excluding "if applicable" conditionals) for a meeting stage.
+const mandatoryRoles = (rules: AttendeeRule[]): string[] =>
+  rules.filter((r) => r.note == null).map((r) => r.role);
+
+// Every matrix rule that carries a configurable default name or mailbox, deduped
+// by role, surfaced so the form can pre-fill names and Admin can review them.
+const attendeeNamedDefaults = (() => {
+  const groups: AttendeeRule[][] = [
+    FORMAL_FINAL_REQUIRED,
+    FORMAL_FINAL_EPC_REQUIRED,
+    FORMAL_FINAL_DBB_REQUIRED,
+    FORMAL_FINAL_OPTIONAL,
+    FORMAL_FINAL_MAJOR_OPTIONAL,
+    FORMAL_FINAL_EPC_DBB_OPTIONAL,
+    PRE_RISK_REQUIRED,
+    PRE_RISK_EPC_DBB_REQUIRED,
+    PRE_RISK_OPTIONAL,
+  ];
+  const seen = new Set<string>();
+  const out: AttendeeRule[] = [];
+  for (const group of groups) {
+    for (const rule of group) {
+      if ((rule.defaultName || rule.email) && !seen.has(rule.role)) {
+        seen.add(rule.role);
+        out.push(rule);
+      }
+    }
+  }
+  return out;
+})();
 
 const router: IRouter = Router();
 
@@ -203,9 +242,12 @@ router.get("/config", (_req: Request, res: Response): void => {
     meetingTypes: [...MEETING_TYPES],
     meetingStatuses: [...MEETING_STATUSES],
     attendeeRoles: [...ATTENDEE_ROLES],
-    epcPrimeRoles: [...EPC_PRIME_ROLES],
-    standardRoles: [...STANDARD_ROLES],
     requiredAttendeeRoles: [...REQUIRED_ATTENDEE_ROLES],
+    formalFinalRequiredRoles: mandatoryRoles(FORMAL_FINAL_REQUIRED),
+    formalFinalEpcRequiredRoles: mandatoryRoles(FORMAL_FINAL_EPC_REQUIRED),
+    preRiskRequiredRoles: mandatoryRoles(PRE_RISK_REQUIRED),
+    preRiskEpcDbbRequiredRoles: mandatoryRoles(PRE_RISK_EPC_DBB_REQUIRED),
+    attendeeNamedDefaults,
     requestTypes: [...REQUEST_TYPES],
     riskIdentificationStatuses: [...RISK_IDENTIFICATION_STATUSES],
     draftStatuses: [...DRAFT_STATUSES],
