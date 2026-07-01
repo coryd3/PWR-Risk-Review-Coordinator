@@ -158,10 +158,13 @@ export interface UsageActionDef {
 // app measures and how much manual effort each automated action replaces.
 // minutesPerUnit is the average time saved per UsageUnit; tune as governance
 // data improves.
+// `usage` values follow the BMcD governance naming pattern
+// <Platform>_<System>_<Tool>_<Action> and must stay stable once the dashboard
+// governance table references them. `label` is the friendly name shown in the UI.
 export const USAGE_ACTIONS = {
   request_created: {
     addin: "Requests",
-    usage: "Risk Review Request Intake",
+    usage: "Web_PWR_RiskCoordinator_CreateRequest",
     minutesPerUnit: 20,
     label: "Request intake",
     description:
@@ -169,7 +172,7 @@ export const USAGE_ACTIONS = {
   },
   email_drafts_generated: {
     addin: "Email",
-    usage: "Meeting Email Draft Generation",
+    usage: "Web_PWR_RiskCoordinator_GenerateEmailDrafts",
     minutesPerUnit: 15,
     label: "Email drafts generated",
     description:
@@ -177,7 +180,7 @@ export const USAGE_ACTIONS = {
   },
   meeting_scheduled: {
     addin: "Meetings",
-    usage: "Risk Meeting Scheduling",
+    usage: "Web_PWR_RiskCoordinator_ScheduleMeeting",
     minutesPerUnit: 10,
     label: "Meetings scheduled",
     description:
@@ -185,7 +188,7 @@ export const USAGE_ACTIONS = {
   },
   tracker_imported: {
     addin: "Import",
-    usage: "Legacy Tracker Import",
+    usage: "Batch_PWR_RiskCoordinator_ImportTrackerRow",
     minutesPerUnit: 5,
     label: "Tracker rows imported",
     description:

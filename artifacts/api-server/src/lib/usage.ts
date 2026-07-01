@@ -92,13 +92,24 @@ function forwardTarget(): string | null {
   return url && url.trim() !== "" ? url.trim() : null;
 }
 
-function buildForwardUrl(base: string, p: PersistParams): string {
+// Formats a Date as `yyyy-MM-dd HH:mm:ss.fff` in UTC, matching the TimeStamp
+// format expected by the external UsageTracking API.
+function formatApiTimestamp(d: Date): string {
+  const pad = (n: number, w = 2): string => String(n).padStart(w, "0");
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` +
+    `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds(), 3)}`
+  );
+}
+
+function buildForwardUrl(base: string, p: PersistParams, createdAt: Date): string {
   const url = new URL(base);
   url.searchParams.set("Program", p.program);
   if (p.addin) url.searchParams.set("Addin", p.addin);
   if (p.version) url.searchParams.set("Version", p.version);
   url.searchParams.set("Usage", p.usage);
   if (p.username) url.searchParams.set("Username", p.username);
+  url.searchParams.set("TimeStamp", formatApiTimestamp(createdAt));
   url.searchParams.set("UsageUnit", String(p.usageUnit));
   return url.toString();
 }
@@ -107,13 +118,17 @@ function buildForwardUrl(base: string, p: PersistParams): string {
  * Fire-and-forget forward of a usage event to the external UsageTracking API.
  * Never throws; updates the row's forward_status when it settles.
  */
-async function forwardUsage(id: number, params: PersistParams): Promise<void> {
+async function forwardUsage(
+  id: number,
+  params: PersistParams,
+  createdAt: Date,
+): Promise<void> {
   const base = forwardTarget();
   if (!base) return;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch(buildForwardUrl(base, params), {
+    const res = await fetch(buildForwardUrl(base, params, createdAt), {
       method: "GET",
       signal: controller.signal,
     });
@@ -166,7 +181,8 @@ async function persist(params: PersistParams): Promise<UsageEventRow | null> {
     return null;
   }
   if (forwardEnabled && row) {
-    void forwardUsage(row.id, params);
+    const createdAt = row.createdAt instanceof Date ? row.createdAt : new Date();
+    void forwardUsage(row.id, params, createdAt);
   }
   return row;
 }

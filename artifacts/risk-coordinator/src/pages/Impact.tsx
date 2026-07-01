@@ -24,6 +24,10 @@ export default function Impact() {
   const { data: summary, isLoading: loadingSummary } = useGetUsageSummary();
   const { data: events, isLoading: loadingEvents } = useListUsageEvents({ limit: 25 });
 
+  const actionLabels = new Map(
+    (summary?.byAction ?? []).map((a) => [a.action, a.label]),
+  );
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -131,7 +135,7 @@ export default function Impact() {
                       <td className="px-4 py-3 text-muted-foreground">
                         {ev.createdAt ? format(new Date(ev.createdAt), "MMM d, yyyy h:mm a") : "—"}
                       </td>
-                      <td className="px-4 py-3">{ev.usage}</td>
+                      <td className="px-4 py-3">{actionLabels.get(ev.action) ?? ev.usage}</td>
                       <td className="px-4 py-3 text-muted-foreground">{ev.username || "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{ev.source}</td>
                       <td className="px-4 py-3 text-right">{ev.minutesSaved.toLocaleString()}</td>

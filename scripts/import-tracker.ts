@@ -659,7 +659,7 @@ async function main(): Promise<void> {
           program: "PWR Risk Review Coordinator",
           addin: "Import",
           version: "1.0.0",
-          usage: "Legacy Tracker Import",
+          usage: "Batch_PWR_RiskCoordinator_ImportTrackerRow",
           action: "tracker_imported",
           username: "import-tracker",
           usageUnit: 1,

@@ -25,6 +25,19 @@ the rest is open would be inconsistent.
 **How to apply:** if auth is ever added, add it app-wide, not just to /usage. A code
 review flagging "open endpoint" here is a known accepted tradeoff.
 
+## BMcD governance naming + API fields
+`usage` event names follow `<Platform>_<System>_<Tool>_<Action>` (e.g.
+`Web_PWR_RiskCoordinator_CreateRequest`, `Batch_..._ImportTrackerRow` for the CLI
+importer). These are the governance-stable identifiers; the friendly UI name is a
+separate `label`. Forwarded GET params: Program, Addin, Version, Usage, Username,
+TimeStamp (UTC `yyyy-MM-dd HH:mm:ss.fff`), UsageUnit. Dollars are NEVER sent — the
+external dashboard applies Hours=TimeSaved×UsageUnit, Dollars=Hours×85.
+**Why:** the BMcD Usage Tracking implementation guide requires stable coded names
+and expects the governance layer (not the tool) to compute dollars.
+**How to apply:** never rename a `usage` value once handed to dashboard governance.
+SettingGP/SettingDept/SettingClient are optional and currently NOT sent (need
+governance values from the user before adding).
+
 ## Impact math
 `minutesSaved = usageUnit * minutesPerUnit` is frozen on each row at write time
 (catalog `minutesPerUnit` from USAGE_ACTIONS). Hours/dollars are derived at read

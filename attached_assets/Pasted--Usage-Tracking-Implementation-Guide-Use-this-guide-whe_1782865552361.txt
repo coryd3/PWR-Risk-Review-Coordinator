@@ -1,0 +1,356 @@
+# Usage Tracking Implementation Guide
+
+Use this guide when adding BMcD usage tracking to future scripts, tools, automations, add-ins, or deployment utilities.
+
+The goal is to capture two levels of measurement:
+
+```text
+1. Official impact events for the BMcD Usage Tracking API and Power BI dashboard.
+2. Detailed JSONL events for troubleshooting, auditing, and future analytics.
+```
+
+Usage tracking must be best effort. Tracking failures must never stop the tool from doing its real job.
+
+## Standard Architecture
+
+Use both tracking paths when possible:
+
+```text
+Official impact dashboard:
+https://cor-bmcdofficetools-app.azurewebsites.net/api/UsageTracking
+
+Detailed event logs:
+\\enr-comos-fs\UsageLogFiles\<ToolName>\
+```
+
+The API should receive clean, first-order impact events only.
+
+The JSONL log should receive richer event detail, including operational events that are useful later but should not inflate official impact numbers.
+
+## What To Send To The API
+
+Only send events that represent measurable value.
+
+Good API events:
+
+```text
+File processed
+Report generated
+Rows updated
+Manual task avoided
+License/session released
+Machine updated by automation
+```
+
+Avoid API events for:
+
+```text
+Tool started
+Verification ran
+Cleanup ran
+Debug event
+Error-only event
+Configuration check
+```
+
+Those can go to JSONL instead.
+
+## API Fields
+
+Send an HTTP GET request to:
+
+```text
+https://cor-bmcdofficetools-app.azurewebsites.net/api/UsageTracking
+```
+
+Required or recommended query parameters:
+
+```text
+Program       Parent tool or standalone solution name
+Addin         Feature/module name
+Version       Runtime version
+Usage         Unique usage event name
+Username      User who ran the tool or received the benefit
+TimeStamp     yyyy-MM-dd HH:mm:ss.fff
+UsageUnit     Count of value-producing units
+SettingGP     Optional context, often group/platform
+SettingDept   Optional context, often department/system
+SettingClient Optional context, often client/business area
+```
+
+Use short but specific values.
+
+Recommended naming pattern for `Usage`:
+
+```text
+<Platform>_<System>_<Tool>_<Action>
+```
+
+Examples:
+
+```text
+AVD_COMOS_IdleKiller_AutoClose
+AVD_COMOS_IdleKiller_FleetInstall
+Excel_Electrical_ReportBuilder_GenerateReport
+Revit_ModelAudit_BatchFixWarnings
+SharePoint_ProjectDocs_BulkDownload
+```
+
+## UsageUnit Guidance
+
+`UsageUnit` should be the simplest honest count of value-producing work.
+
+Examples:
+
+```text
+1 generated report = UsageUnit 1
+50 rows processed = UsageUnit 50
+4 machines updated = UsageUnit 4
+3 idle licenses released = UsageUnit 3
+12 files renamed = UsageUnit 12
+```
+
+Do not calculate dollars in the script unless the specific project requires it.
+
+The dashboard/governance layer should apply:
+
+```text
+Hours Saved = Time Saved Value * UsageUnit
+Dollars Saved = Hours Saved * 85
+```
+
+Keep the script focused on reporting the usage units accurately.
+
+## JSONL Detail Logs
+
+Write detailed events to:
+
+```text
+\\enr-comos-fs\UsageLogFiles\<ToolName>\<ToolName>-YYYY-MM-DD.jsonl
+```
+
+Each line should be one compact JSON object.
+
+Recommended common fields:
+
+```text
+TimeStamp
+ToolName
+Version
+EventType
+Outcome
+ComputerName
+UserDomain
+Username
+```
+
+Add context-specific fields as needed:
+
+```text
+ProcessId
+SessionId
+Target
+Pool
+FilePath
+RecordCount
+UsageUnit
+ElapsedSeconds
+ErrorMessage
+ApiUsageName
+ApiSubmitted
+```
+
+JSONL event names can be more detailed than API usage names.
+
+Examples:
+
+```text
+ToolStarted
+TaskStarted
+TaskCompleted
+TaskFailed
+ApiTrackingSubmitted
+ApiTrackingFailed
+DeployStarted
+DeployTargetResult
+DeployCompleted
+```
+
+## PowerShell Helper Template
+
+Copy and adapt this helper into PowerShell projects.
+
+```powershell
+$UsageTrackingApiUrl = "https://cor-bmcdofficetools-app.azurewebsites.net/api/UsageTracking"
+$UsageLogRoot = "\\enr-comos-fs\UsageLogFiles\<ToolName>"
+$UsageApiTimeoutSeconds = 5
+$UsageProgram = "<ToolName>"
+
+function Get-ToolVersion {
+    try {
+        return (Get-Content -LiteralPath ".\Version.txt" -Raw).Trim()
+    }
+    catch {
+        return "Unknown"
+    }
+}
+
+function ConvertTo-QueryString {
+    param([System.Collections.IDictionary]$Fields)
+
+    $parts = foreach ($key in $Fields.Keys) {
+        "{0}={1}" -f [System.Uri]::EscapeDataString([string]$key), [System.Uri]::EscapeDataString([string]$Fields[$key])
+    }
+
+    return ($parts -join "&")
+}
+
+function Send-UsageTrackingApiEvent {
+    param(
+        [string]$Addin,
+        [string]$Usage,
+        [int]$UsageUnit,
+        [string]$SettingGP = "",
+        [string]$SettingDept = "",
+        [string]$SettingClient = ""
+    )
+
+    if ($UsageUnit -le 0) {
+        return
+    }
+
+    try {
+        $fields = [ordered]@{
+            Program       = $UsageProgram
+            Addin         = $Addin
+            Version       = (Get-ToolVersion)
+            Usage         = $Usage
+            Username      = $env:USERNAME
+            TimeStamp     = (Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff")
+            UsageUnit     = $UsageUnit
+            SettingGP     = $SettingGP
+            SettingDept   = $SettingDept
+            SettingClient = $SettingClient
+        }
+
+        $url = "{0}?{1}" -f $UsageTrackingApiUrl, (ConvertTo-QueryString -Fields $fields)
+        Invoke-WebRequest -Uri $url -Method Get -UseBasicParsing -TimeoutSec $UsageApiTimeoutSeconds | Out-Null
+    }
+    catch {
+        # Usage tracking must never break the tool.
+    }
+}
+
+function Write-UsageDetailEvent {
+    param(
+        [string]$EventType,
+        [string]$Outcome,
+        [hashtable]$Data = @{}
+    )
+
+    try {
+        $event = [ordered]@{
+            TimeStamp    = (Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff")
+            ToolName     = $UsageProgram
+            Version      = (Get-ToolVersion)
+            EventType    = $EventType
+            Outcome      = $Outcome
+            ComputerName = $env:COMPUTERNAME
+            UserDomain   = $env:USERDOMAIN
+            Username     = $env:USERNAME
+        }
+
+        foreach ($key in $Data.Keys) {
+            $event[$key] = $Data[$key]
+        }
+
+        New-Item -ItemType Directory -Path $UsageLogRoot -Force -ErrorAction Stop | Out-Null
+        $usageLogPath = Join-Path $UsageLogRoot ("{0}-{1}.jsonl" -f $UsageProgram, (Get-Date -Format "yyyy-MM-dd"))
+        ($event | ConvertTo-Json -Compress -Depth 6) | Add-Content -LiteralPath $usageLogPath -Encoding UTF8
+    }
+    catch {
+        # Detailed usage logging is best effort only.
+    }
+}
+```
+
+Example usage:
+
+```powershell
+Write-UsageDetailEvent -EventType "ReportGenerated" -Outcome "Succeeded" -Data @{
+    ReportName     = "MonthlyStatus"
+    RecordsUpdated = 42
+}
+
+Send-UsageTrackingApiEvent `
+    -Addin "ReportBuilder" `
+    -Usage "Excel_Project_ReportBuilder_GenerateReport" `
+    -UsageUnit 1 `
+    -SettingGP "ProjectControls" `
+    -SettingDept "Reporting" `
+    -SettingClient "Internal"
+```
+
+## Implementation Checklist
+
+For each new project:
+
+```text
+Define the true value event.
+Define the UsageUnit.
+Define Program, Addin, Usage, and context fields.
+Add best-effort API helper.
+Add best-effort JSONL helper.
+Send API calls only for value-producing completions.
+Write detailed JSONL events for start, completion, failure, and useful detail.
+Add a USAGE-TRACKING section to the README or runbook.
+Add the usage names to the governance/dashboard intake list.
+Test that the tool still succeeds if the API/share is unavailable.
+```
+
+## Governance Intake Template
+
+Use this when handing the new usage events to whoever maintains the dashboard rules.
+
+```text
+Tool name:
+Creator:
+Curator:
+Usage event name:
+Program:
+Addin:
+UsageUnit definition:
+Recommended Time Saved Value:
+SettingGP:
+SettingDept:
+SettingClient:
+Comment:
+```
+
+Example:
+
+```text
+Tool name: COMOS Idle Killer
+Creator: BMCD / cldavis
+Curator: BMCD / cldavis or assigned COMOS owner
+Usage event name: AVD_COMOS_IdleKiller_AutoClose
+Program: COMOSIdleKiller
+Addin: Monitor
+UsageUnit definition: Number of idle COMOS processes successfully closed
+Recommended Time Saved Value: Maintain in dashboard governance table
+SettingGP: AVD
+SettingDept: COMOS
+SettingClient: LicenseManagement
+Comment: Releases idle COMOS sessions so expensive COMOS licenses are available to active users.
+```
+
+## Design Rules
+
+```text
+Do not block the main workflow on usage tracking.
+Do not send noisy events to the official dashboard.
+Do not overclaim value in code.
+Do capture enough detail to justify value later.
+Do keep event names stable once dashboard governance uses them.
+Do document every usage event in the package README or runbook.
+```
