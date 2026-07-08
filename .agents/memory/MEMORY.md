@@ -1,7 +1,7 @@
 - [Config edit endpoints](risk-coordinator-config-edit.md) — adding admin-editable config requires new openapi PUT paths + orval codegen, not just a route handler.
 - [Drizzle partial update guard](drizzle-partial-update.md) — `.set({})` throws 500 "No values to set"; always strip undefined and 400 on empty body.
 - [Audit events requirement](audit-events.md) — every mutating API path must call recordAudit(); acceptance review fails if audit_events stays unwritten.
-- [Required attendee roles](required-attendee-roles.md) — 6 mandatory roles; single source REQUIRED_ATTENDEE_ROLES drives warnings, /config, and form pre-seeding.
+- [Required attendee roles](required-attendee-roles.md) — live required set is DYNAMIC (stage + EPC/DBB via computeAttendeeMatrix), not a fixed 6; importer uses a separate flat set; docs are stale.
 - [Attendee matrix](attendee-matrix.md) — attendees are a matrix (meeting stage x EPC/DBB x Major x business line), not a flat list; named people are configurable defaults, never hardcoded.
 - [DB & scripts tooling](db-and-scripts-tooling.md) — drizzle generate is broken (use push + pg_dump); scripts need drizzle-orm direct dep; xlsx ESM has no readFile.
 - [Usage tracking](usage-tracking.md) — external forwarding is production-only env; POST /usage now behind RBAC (not open); impact math frozen at write, rounded at read.

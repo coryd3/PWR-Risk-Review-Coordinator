@@ -1,24 +1,47 @@
 ---
 name: Required attendee roles
-description: Policy that certain risk-review attendee roles are mandatory
+description: How the app decides which attendee roles are mandatory (two separate code paths)
 ---
 
-The PWR Risk Review intake treats a fixed set of attendee roles as mandatory:
-each must exist on a request AND have at least one named person. As of this
-writing the set is Business-Line Director, Project Manager, Engineering Manager,
-Biz Develop/Capture Manager, Executive-in-Charge, Attorney.
+There are TWO distinct "required attendee" definitions. Do not conflate them.
 
-**Why:** The original MS Form marked these roles required; coordinators cannot
-schedule a review without them, so the app must flag/block their absence.
+## 1. Live app (request detail warnings) — the authoritative, dynamic one
+`artifacts/api-server/src/lib/rules.ts`: `computeWarnings` -> `getRequiredRoles`
+-> `computeAttendeeMatrix`, sourced from role lists in
+`artifacts/api-server/src/lib/constants.ts`.
 
-**Decisions to keep consistent:**
-- Keep ONE source of truth for the list on the backend and have both the
-  validation/warning path and the public config read from it. The form must not
-  hardcode its own copy — it consumes the config list.
-- "Populated" means at least one attendee with that role has a non-empty name
-  (matches the backend's hasNamedAttendee semantics). Validate per-role, not
-  per-row, so extra/duplicate same-role rows don't cause false negatives.
-- The same required set applies regardless of EPC-prime status.
-- When pre-seeding required rows in the form, never drop existing attendees:
-  surface one canonical row per required role, but preserve all other rows
-  (including additional same-role duplicates). Editing must not lose data.
+The required set is assembled PER REQUEST from a matrix, driven by:
+- Review stage(s), derived from Request Type string: `requestNeedsPreRisk`
+  (contains "pre-risk") and `requestNeedsFormalOrFinal` (contains "formal risk"
+  or "final risk"). The two REQUEST_TYPES map to: "Pre-Risk & Formal Risk
+  Discussion" => both stages; "Final Risk Review" => formal/final only.
+- Delivery method via `classifyDelivery`: isEpc (Design-Build/EPC OR isEpcPrime
+  flag), isDbb (Design-Bid-Build), isProfessionalServices. EPC/DBB add extra
+  required seats.
+- Major status and business line do NOT change the required set — they only add
+  OPTIONAL attendees and business-line distribution mailboxes.
+
+Only rules with `note == null` are flagged by the "Required attendees are
+missing" warning. Conditional seats (note like "if applicable", "only if EPC
+TIC > $30M") appear in the matrix but are intentionally NOT flagged.
+
+"Populated" = `hasNamedAttendee`: an attendee row with that role AND a
+non-empty trimmed name. Per-role, not per-row. (Attorney also has its own
+standalone "Attorney is missing" warning, independent of the matrix.)
+
+## 2. Legacy tracker importer — a flat fallback
+`lib/tracker-import/src/tracker-normalize.ts`: `REQUIRED_ATTENDEE_ROLES` is a
+fixed set of 6 (Business-Line Director, Project Manager, Engineering Manager,
+Biz Develop/Capture Manager, Executive-in-Charge, Attorney), used by
+`missingRequiredAttendeeRoles` to warn on imported spreadsheet rows. Flat, does
+NOT vary by stage/delivery. `constants.ts` also exports a flat baseline
+`REQUIRED_ATTENDEE_ROLES = FORMAL_FINAL_REQUIRED.map(r => r.role)` (8 roles).
+
+**Why:** coordinators cannot run a review without the mandatory seats, so the
+app warns (never blocks) when they are absent.
+
+## Stale references to distrust
+`docs/rules-and-template-notes.md` (required-attendee section) still describes an
+old model (EPC: Business-Line Director/PM/Attorney; Non-EPC: Attorney; and
+`EPC_PRIME_ROLES`/`STANDARD_ROLES` constants) that no longer exists in code.
+Trust `rules.ts` + `constants.ts`, not that doc.
