@@ -22,20 +22,20 @@ const attendeeSchema = z.object({
 });
 
 const formSchema = z.object({
-  requesterName: z.string().optional(),
+  requesterName: z.string().min(1, "Required"),
   requesterEmail: z.string().email().optional().or(z.literal("")),
-  clientName: z.string().optional(),
-  projectName: z.string().optional(),
-  crmOpportunityNumber: z.string().optional(),
-  bmcdContractValueRaw: z.string().optional(),
-  totalInstalledCostRaw: z.string().optional(),
+  clientName: z.string().min(1, "Required"),
+  projectName: z.string().min(1, "Required"),
+  crmOpportunityNumber: z.string().min(1, "Required"),
+  bmcdContractValueRaw: z.string().min(1, "Required"),
+  totalInstalledCostRaw: z.string().min(1, "Required"),
   businessLines: z.array(z.string()).optional(),
-  contractReviewRvwNumber: z.string().optional(),
-  deliveryMethod: z.string().optional(),
+  contractReviewRvwNumber: z.string().min(1, "Required"),
+  deliveryMethod: z.string().min(1, "Required"),
   region: z.string().optional(),
   legalMissingExplanation: z.string().optional(),
   isEpcPrime: z.boolean().optional(),
-  requestType: z.string().optional(),
+  requestType: z.string().min(1, "Required"),
   riskIdentificationStatus: z.string().optional(),
   riskIdentificationDate: z.string().optional(),
   riskIdentificationExplanation: z.string().optional(),
@@ -285,43 +285,45 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
           <h3 className="font-medium text-lg">Project Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="projectName" render={({ field }) => (
-              <FormItem><FormLabel>Project Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Project Name<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="clientName" render={({ field }) => (
-              <FormItem><FormLabel>Client Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Client Name<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="requesterName" render={({ field }) => (
-              <FormItem><FormLabel>Requester Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Requester Name<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="requesterEmail" render={({ field }) => (
               <FormItem><FormLabel>Requester Email</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="crmOpportunityNumber" render={({ field }) => (
-              <FormItem><FormLabel>CRM Opportunity #</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>CRM Opportunity #<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="contractReviewRvwNumber" render={({ field }) => (
-              <FormItem><FormLabel>Contract Review RVW #</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Contract Review RVW #<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="requestType" render={({ field }) => (
               <FormItem>
-                <FormLabel>Request Type</FormLabel>
+                <FormLabel>Request Type<span className="text-destructive"> *</span></FormLabel>
                 <Select onValueChange={field.onChange} value={field.value || undefined}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl>
                   <SelectContent>
                     {config?.requestTypes.map((rt) => <SelectItem key={rt} value={rt}>{rt}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="deliveryMethod" render={({ field }) => (
               <FormItem>
-                <FormLabel>Delivery Method</FormLabel>
+                <FormLabel>Delivery Method<span className="text-destructive"> *</span></FormLabel>
                 <Select onValueChange={field.onChange} value={field.value || undefined}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl>
                   <SelectContent>
                     {config?.deliveryMethods.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="region" render={({ field }) => (
@@ -359,10 +361,10 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
           <h3 className="font-medium text-lg">Contract Values</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="bmcdContractValueRaw" render={({ field }) => (
-              <FormItem><FormLabel>BMCD Contract Value</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>BMCD Contract Value<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="totalInstalledCostRaw" render={({ field }) => (
-              <FormItem><FormLabel>Total Installed Cost</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+              <FormItem><FormLabel>Total Installed Cost<span className="text-destructive"> *</span></FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
           </div>
           <FormField control={form.control} name="isEpcPrime" render={({ field }) => (
