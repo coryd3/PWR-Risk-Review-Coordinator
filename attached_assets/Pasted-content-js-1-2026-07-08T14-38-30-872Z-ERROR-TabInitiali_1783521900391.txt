@@ -1,0 +1,49 @@
+content.js:1 2026-07-08T14:38:30.872Z [ERROR] [TabInitializer] InitMessageError: Ping messags wasn't answered
+o @ content.js:1
+content.js:1 [topLevelID: l224hDtUG8] [url: https://replit.com/t/burns-and-mcdonnell/repls] 2026-07-08T14:38:32.861Z [DEBUG] [zeroTouchLogger] Setting zero touch log level to debug
+contentframe.js:37 Compiling or instantiating a WebAssembly module violates the following Content Security policy directive because 'unsafe-eval' is not an allowed source of script: "script-src 'self'". The policy is report-only, so the violation has been logged but no further action has been taken.
+ Compiling or instantiating a WebAssembly module violates the following Content Security policy directive because 'unsafe-eval' is not an allowed source of script: "script-src 'self'". The policy is report-only, so the violation has been logged but no further action has been taken.
+/t/burns-and-mcdonnell/repls:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+ 2026-07-08T14:38:33.343Z [DEBUG] [zeroTouchLogger] Setting zero touch log level to debug
+ 2026-07-08T14:38:33.344Z [DEBUG] [zeroTouchLogger] Setting zero touch log level to debug
+contentframe.js:1 2026-07-08T14:38:34.014Z [DEBUG] [zeroTouchLogger] Setting zero touch log level to debug
+contentframe.js:1 2026-07-08T14:38:34.017Z [DEBUG] [zeroTouchLogger] Setting zero touch log level to debug
+2contentframe.js:1 2026-07-08T14:38:34.339Z [DEBUG] [zeroTouchLogger] Setting zero touch log level to debug
+0i8wy8tbht2ow.js:2 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'ambient-light-sensor'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'battery'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'execution-while-not-rendered'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'execution-while-out-of-viewport'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'layout-animations'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'legacy-image-formats'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'navigation-override'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'oversized-images'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'publickey-credentials'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'speaker-selection'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'unoptimized-images'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'unsized-media'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Unrecognized feature: 'pointer-lock'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Allow attribute will take precedence over 'allowfullscreen'.
+C @ 0i8wy8tbht2ow.js:2
+0i8wy8tbht2ow.js:2 Allow attribute will take precedence over 'allowpaymentrequest'.
+C @ 0i8wy8tbht2ow.js:2
+0dcik2ph-yzua.js:26 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://18eacf80-7551-4a12-b1e3-27a7587c1a08-00-mukaszb1bbrt.kirk.replit.dev') does not match the recipient window's origin ('https://replit.com').
+S @ 0dcik2ph-yzua.js:26
+0dcik2ph-yzua.js:26 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://18eacf80-7551-4a12-b1e3-27a7587c1a08-00-mukaszb1bbrt.kirk.replit.dev') does not match the recipient window's origin ('https://replit.com').
+S @ 0dcik2ph-yzua.js:26
+gravatar.com/avatar/7391980a62497e22001f1a007f4e3ab5a16025937eb7884107292d25e429f624?d=404:1  Failed to load resource: the server responded with a status of 404 ()
+gravatar.com/avatar/87a43932cf56de56317b0d40127f2ae0531062cf36e96bfb06d31a5b826a3f8a?d=404:1  Failed to load resource: the server responded with a status of 404 ()
