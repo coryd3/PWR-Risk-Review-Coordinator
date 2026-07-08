@@ -10,3 +10,4 @@
 - [Import validation reasons](import-validation-reasons.md) — unparseable dates block a row as errors; unknown triggers/missing roles/no client warn but still import; keep existing reason substrings.
 - [Policy enforcement server-side](policy-enforcement-server-side.md) — packet scope rules (e.g. Pre-Risk-only calendar) must be guarded in the API route, not just hidden in the UI, or review fails.
 - [Subject-first identity binding](subject-first-identity-binding.md) — sign-in upsert must match by OIDC subject first; claim email invites only when lastLoginAt IS NULL; never auto-merge subjects.
+- [Outlook mailto + .ics invites](outlook-ics-invites.md) — no ORGANIZER line, attendees in DESCRIPTION (names-only), placeholder start zone-resolved server-side or invite lands at ~4AM.

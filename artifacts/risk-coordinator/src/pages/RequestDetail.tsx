@@ -12,7 +12,8 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Edit, AlertCircle, RefreshCw, Plus, MessageSquare, User } from "lucide-react";
+import { ChevronLeft, Edit, AlertCircle, RefreshCw, Plus, MessageSquare, User, Mail, CalendarPlus } from "lucide-react";
+import { openInOutlook, downloadInvite } from "@/lib/outlook";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -385,7 +386,7 @@ function EmailDraftsSection({ requestId, config }: { requestId: number, config: 
           </DialogContent>
         </Dialog>
       </div>
-      <p className="text-xs text-muted-foreground mb-6">Generated drafts are saved locally for preview and copying. Emails are not sent automatically.</p>
+      <p className="text-xs text-muted-foreground mb-6">Use "Open in Outlook" to launch a pre-filled message in your mail client. Drafts are saved here for reference; nothing is sent automatically.</p>
       
       {isLoading ? (
         <Skeleton className="h-32 w-full" />
@@ -458,11 +459,21 @@ function DraftItem({ draft, draftStatuses, onSave, isSaving }: { draft: any, dra
 
   return (
     <div className="border border-border rounded-xl p-4 hover:border-primary/30 transition-colors group">
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-start mb-2 gap-2">
         <div className="font-semibold text-sm line-clamp-1">{draft.subject}</div>
-        <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
-          <Edit className="w-3.5 h-3.5" />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2.5 text-xs rounded-full"
+            onClick={() => openInOutlook({ to: draft.toRecipients, cc: draft.ccRecipients, subject: draft.subject, body: draft.body })}
+          >
+            <Mail className="w-3.5 h-3.5 mr-1" /> Open in Outlook
+          </Button>
+          <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
+            <Edit className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
       <div className="text-xs text-muted-foreground mb-3 flex gap-2 items-center flex-wrap">
         <Badge variant="outline" className="text-[10px]">{draft.templateType}</Badge>
@@ -549,10 +560,18 @@ function CalendarPreviewSection({ requestId, requestType }: { requestId: number,
       </div>
       <p className="text-xs text-muted-foreground mb-6">See how the Pre-Risk calendar invite would look before scheduling. No event will be created.</p>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap items-center">
         <Button variant="outline" onClick={handlePreview} disabled={generatePreview.isPending} className="rounded-full">
           {generatePreview.isPending ? "Loading..." : "Generate Pre-Risk Preview"}
         </Button>
+        {preview && (
+          <Button onClick={() => downloadInvite(preview)} disabled={!preview.start} className="rounded-full">
+            <CalendarPlus className="w-4 h-4 mr-2" /> Download Outlook invite (.ics)
+          </Button>
+        )}
+        {preview && !preview.start && (
+          <span className="text-xs text-muted-foreground">Set a Pre-Risk Target Date to enable the invite.</span>
+        )}
       </div>
 
       {preview && (

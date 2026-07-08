@@ -47,6 +47,42 @@ function targetDateForType(
   return null;
 }
 
+// Convert a wall-clock time (hour:minute on dateStr) in the given IANA timezone
+// to the corresponding UTC instant, accounting for DST on that date. This avoids
+// relying on the server's local timezone (UTC in production), which would push a
+// downloaded invite to the small hours of the morning.
+function zonedWallTimeToUtc(
+  dateStr: string,
+  hour: number,
+  minute: number,
+  timeZone: string,
+): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const utcTs = Date.UTC(y, m - 1, d, hour, minute, 0);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(utcTs));
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? "0");
+  const asTz = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour"),
+    get("minute"),
+    get("second"),
+  );
+  const offset = asTz - utcTs;
+  return new Date(utcTs - offset);
+}
+
 export function buildCalendarPreview(
   request: RiskReviewRequestRow,
   triggers: RiskTriggerRow[],
@@ -76,8 +112,10 @@ export function buildCalendarPreview(
   } else {
     const target = targetDateForType(request, meetingType);
     if (target) {
-      // Default to 10:00 local target date as a placeholder start time.
-      const startDate = new Date(`${target}T10:00:00`);
+      // Default to 10:00 AM in the review's timezone as a placeholder start
+      // time, resolved to the correct UTC instant so downloaded invites land at
+      // 10:00 AM local rather than in the server timezone (UTC in production).
+      const startDate = zonedWallTimeToUtc(target, 10, 0, DEFAULT_TIMEZONE);
       start = startDate.toISOString();
       end = new Date(
         startDate.getTime() + DEFAULT_MEETING_DURATION_MINUTES * 60_000,
