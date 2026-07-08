@@ -1,1 +1,9 @@
-command: ["corepack", "pnpm", "run", "start"]
+command: ["node", "artifacts/api-server/dist/index.mjs"]
+
+resources:
+  - name: pwr-risk-review-db
+    lakebase:
+      project: pwr-risk-review-coordinator
+      branch: production
+      database: databricks-postgres
+      permission: read_write
