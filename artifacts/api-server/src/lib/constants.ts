@@ -8,6 +8,7 @@ export const REQUEST_STATUSES = [
   "New",
   "Needs Review",
   "Missing Info",
+  "Roles Assigned",
   "Ready to Schedule Pre-Risk",
   "Pre-Risk Scheduled",
   "Pre-Risk Complete",
@@ -106,6 +107,15 @@ export interface AttendeeRule {
   // a note are conditional and are NOT flagged as missing by warnings.
   note?: string;
 }
+
+// Coordinator seats that are assigned by the admin AFTER the requester submits
+// the initial request. They are never collected on the new-request form; the
+// admin fills them in from the request dashboard, which advances the request
+// status to "Roles Assigned".
+export const ADMIN_ASSIGNED_ROLES = [
+  "Formal Risk Coordinator",
+  "PWR Risk Coordinator",
+] as const;
 
 // Required for every Formal & Final Risk Review.
 export const FORMAL_FINAL_REQUIRED: AttendeeRule[] = [

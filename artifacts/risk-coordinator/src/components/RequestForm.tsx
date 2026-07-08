@@ -158,6 +158,19 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
     return Array.from(new Set(roles));
   }, [config, watchedRequestType, watchedIsEpcPrime, watchedDeliveryMethod]);
 
+  // Coordinator seats the admin assigns after submission. They are hidden from
+  // the new-request form entirely and never block submission; on the edit form
+  // they appear as blank rows for the admin to fill in.
+  const adminAssignedRoles = useMemo(
+    () => new Set(config?.adminAssignedRoles ?? []),
+    [config],
+  );
+  const requesterRequiredRoles = useMemo(
+    () => requiredRoles.filter((r) => !adminAssignedRoles.has(r)),
+    [requiredRoles, adminAssignedRoles],
+  );
+  const seededRoles = isEdit ? requiredRoles : requesterRequiredRoles;
+
   const defaultNameByRole = useMemo(() => {
     const map = new Map<string, string>();
     for (const d of config?.attendeeNamedDefaults ?? []) {
@@ -166,7 +179,7 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
     return map;
   }, [config]);
 
-  const requiredKey = requiredRoles.join("|");
+  const requiredKey = seededRoles.join("|");
   useEffect(() => {
     if (!config) return;
     const current = form.getValues("attendees") || [];
@@ -175,7 +188,7 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
     // One canonical row per required role at the top (reusing the first existing
     // attendee for that role if present, pre-filling any configured default
     // name), then every other attendee preserved in order.
-    const requiredRows = requiredRoles.map(
+    const requiredRows = seededRoles.map(
       (r) => firstByRole.get(r) ?? { role: r, name: defaultNameByRole.get(r) ?? "", email: "" },
     );
     const usedRequired = new Set(requiredRows);
@@ -193,7 +206,7 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
   const onSubmit = (values: RequestFormValues) => {
     const attendeeList = values.attendees || [];
     const missingRequired: string[] = [];
-    requiredRoles.forEach((role) => {
+    requesterRequiredRoles.forEach((role) => {
       const hasName = attendeeList.some(
         (a) => a.role === role && a.name && a.name.trim() !== "",
       );
@@ -466,9 +479,12 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
               <Plus className="w-4 h-4 mr-1" /> Add Attendee
             </Button>
           </div>
-          {requiredRoles.length > 0 && (
+          {seededRoles.length > 0 && (
             <p className="text-sm text-muted-foreground">
-              Roles marked <span className="text-destructive">*</span> are required and must have a name.
+              Roles marked <span className="text-destructive">*</span> are required{isEdit ? "" : " and must have a name"}.
+              {isEdit && adminAssignedRoles.size > 0 && (
+                <> Coordinator roles are assigned by the admin and may be filled in later.</>
+              )}
             </p>
           )}
           {attendeeFields.length === 0 && (
@@ -476,7 +492,7 @@ export function RequestForm({ initialData, isEdit }: RequestFormProps) {
           )}
           <div className="space-y-3">
             {attendeeFields.map((af, index) => {
-              const isRequired = index < requiredRoles.length;
+              const isRequired = index < seededRoles.length;
               return (
               <div key={af.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.5fr_auto] gap-3 items-end rounded-md border p-3">
                 <FormField control={form.control} name={`attendees.${index}.role`} render={({ field }) => (

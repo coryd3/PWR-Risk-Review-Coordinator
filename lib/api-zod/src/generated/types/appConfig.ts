@@ -18,6 +18,7 @@ export interface AppConfig {
   meetingStatuses: string[];
   attendeeRoles: string[];
   requiredAttendeeRoles: string[];
+  adminAssignedRoles: string[];
   formalFinalRequiredRoles: string[];
   formalFinalEpcRequiredRoles: string[];
   preRiskRequiredRoles: string[];

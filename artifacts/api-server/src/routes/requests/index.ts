@@ -44,7 +44,11 @@ import {
   defaultRecipientsForType,
 } from "../../lib/templates";
 import { buildCalendarPreview } from "../../lib/calendar";
-import { RISK_REVIEW_MAILBOX, RISK_COORDINATOR_RECIPIENT } from "../../lib/constants";
+import {
+  RISK_REVIEW_MAILBOX,
+  RISK_COORDINATOR_RECIPIENT,
+  ADMIN_ASSIGNED_ROLES,
+} from "../../lib/constants";
 import { recordAudit } from "../../lib/audit";
 import { recordUsage } from "../../lib/usage";
 
@@ -229,6 +233,44 @@ router.put("/requests/:id", async (req: Request, res: Response): Promise<void> =
     await replaceAttendees(id, attendees);
   }
   await recomputeClassification(id);
+
+  // When the admin fills in both coordinator seats on an early-stage request,
+  // automatically advance it to "Roles Assigned" (recorded in status history).
+  const EARLY_STATUSES = ["New", "Needs Review", "Missing Info"];
+  // Respect a status explicitly set in this same save: only auto-advance when
+  // the request is still in an early stage after the field update.
+  const statusAfterUpdate =
+    typeof values.status === "string" ? values.status : existing.status;
+  if (attendees !== undefined && EARLY_STATUSES.includes(statusAfterUpdate)) {
+    const allCoordinatorsAssigned = ADMIN_ASSIGNED_ROLES.every((role) =>
+      attendees.some(
+        (a) => a.role === role && a.name != null && a.name.trim() !== "",
+      ),
+    );
+    if (allCoordinatorsAssigned) {
+      await db.insert(statusHistoryTable).values({
+        requestId: id,
+        previousStatus: statusAfterUpdate,
+        newStatus: "Roles Assigned",
+        changedBy: req.user?.email ?? req.user?.id ?? null,
+        notes: "Set automatically when both coordinator roles were assigned",
+      });
+      await db
+        .update(riskReviewRequestsTable)
+        .set({ status: "Roles Assigned" })
+        .where(eq(riskReviewRequestsTable.id, id));
+      await recordAudit(req, {
+        entityType: "request",
+        entityId: id,
+        action: "status_change",
+        detail: {
+          previousStatus: statusAfterUpdate,
+          newStatus: "Roles Assigned",
+          automatic: true,
+        },
+      });
+    }
+  }
 
   await recordAudit(req, {
     entityType: "request",
