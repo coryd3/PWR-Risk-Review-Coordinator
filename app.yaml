@@ -1,4 +1,4 @@
-command: ["node", "artifacts/api-server/dist/index.mjs"]
+command: ["corepack", "pnpm", "run", "start"]
 
 resources:
   - name: pwr-risk-review-db
