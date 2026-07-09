@@ -555,6 +555,58 @@ export const UpdateMeetingResponse = zod.object({
 
 
 /**
+ * @summary Create or update the Outlook calendar invite for a meeting
+ */
+export const SendMeetingInviteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SendMeetingInviteResponse = zod.object({
+  "id": zod.number(),
+  "requestId": zod.number(),
+  "meetingType": zod.string(),
+  "targetDate": zod.string().nullish(),
+  "scheduledStart": zod.string().nullish(),
+  "scheduledEnd": zod.string().nullish(),
+  "timezone": zod.string().nullish(),
+  "subject": zod.string().nullish(),
+  "body": zod.string().nullish(),
+  "teamsLink": zod.string().nullish(),
+  "outlookEventId": zod.string().nullish(),
+  "status": zod.string(),
+  "riskLead": zod.string().nullish(),
+  "rescheduledCount": zod.number(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
+ * @summary Cancel the meeting (sends an Outlook cancellation if an invite was sent)
+ */
+export const CancelMeetingInviteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CancelMeetingInviteResponse = zod.object({
+  "id": zod.number(),
+  "requestId": zod.number(),
+  "meetingType": zod.string(),
+  "targetDate": zod.string().nullish(),
+  "scheduledStart": zod.string().nullish(),
+  "scheduledEnd": zod.string().nullish(),
+  "timezone": zod.string().nullish(),
+  "subject": zod.string().nullish(),
+  "body": zod.string().nullish(),
+  "teamsLink": zod.string().nullish(),
+  "outlookEventId": zod.string().nullish(),
+  "status": zod.string(),
+  "riskLead": zod.string().nullish(),
+  "rescheduledCount": zod.number(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
  * @summary List email drafts for a request
  */
 export const ListEmailDraftsParams = zod.object({

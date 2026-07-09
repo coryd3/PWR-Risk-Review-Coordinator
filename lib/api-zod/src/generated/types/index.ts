@@ -28,6 +28,7 @@ export * from './emailTemplate';
 export * from './emailTemplateUpdate';
 export * from './error';
 export * from './errorEnvelope';
+export * from './errorMessage';
 export * from './generateDraftsInput';
 export * from './handleBrowserLoginCallbackParams';
 export * from './healthStatus';

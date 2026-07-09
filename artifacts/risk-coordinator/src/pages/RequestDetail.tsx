@@ -6,13 +6,14 @@ import {
   useListNotes, getListNotesQueryKey, useCreateNote,
   useListStatusHistory, getListStatusHistoryQueryKey, useChangeStatus,
   useGenerateCalendarPreview, useCreateMeeting, useUpdateMeeting,
+  useSendMeetingInvite, useCancelMeetingInvite,
   getConfig
 } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Edit, AlertCircle, RefreshCw, Plus, MessageSquare, User, Mail, CalendarPlus } from "lucide-react";
+import { ChevronLeft, Edit, AlertCircle, RefreshCw, Plus, MessageSquare, User, Mail, CalendarPlus, Send, CalendarX } from "lucide-react";
 import { openInOutlook, downloadInvite } from "@/lib/outlook";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -605,11 +606,110 @@ function MeetingsSection({ request, config }: { request: any, config: any }) {
   const { toast } = useToast();
   const createMeeting = useCreateMeeting();
   const updateMeeting = useUpdateMeeting();
-  
+  const sendInvite = useSendMeetingInvite();
+  const cancelInvite = useCancelMeetingInvite();
+
   const [isOpen, setIsOpen] = useState(false);
   const [meetingType, setMeetingType] = useState("Pre-Risk");
   const [editMeetingId, setEditMeetingId] = useState<number | null>(null);
   const [editStatus, setEditStatus] = useState("Scheduled");
+  const [inviteMeeting, setInviteMeeting] = useState<any | null>(null);
+  const [inviteStart, setInviteStart] = useState("");
+  const [inviteEnd, setInviteEnd] = useState("");
+  const [inviteSubject, setInviteSubject] = useState("");
+
+  const toLocalInput = (iso: string | null | undefined) =>
+    iso ? format(new Date(iso), "yyyy-MM-dd'T'HH:mm") : "";
+
+  const openInviteDialog = (m: any) => {
+    setInviteMeeting(m);
+    setInviteStart(toLocalInput(m.scheduledStart));
+    setInviteEnd(toLocalInput(m.scheduledEnd));
+    setInviteSubject(m.subject || `${m.meetingType} Risk Review - ${request.projectName || ""}`.trim());
+  };
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: getGetRequestQueryKey(request.id) });
+
+  const handleSendInvite = () => {
+    if (!inviteMeeting) return;
+    if (!inviteStart || !inviteEnd) {
+      toast({ title: "Pick a start and end time first", variant: "destructive" });
+      return;
+    }
+    if (new Date(inviteEnd) <= new Date(inviteStart)) {
+      toast({ title: "End time must be after the start time", variant: "destructive" });
+      return;
+    }
+    const isUpdate = !!inviteMeeting.outlookEventId;
+    updateMeeting.mutate(
+      {
+        id: inviteMeeting.id,
+        data: {
+          scheduledStart: new Date(inviteStart).toISOString(),
+          scheduledEnd: new Date(inviteEnd).toISOString(),
+          subject: inviteSubject || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          sendInvite.mutate(
+            { id: inviteMeeting.id },
+            {
+              onSuccess: () => {
+                refresh();
+                setInviteMeeting(null);
+                toast({
+                  title: isUpdate ? "Invite updated" : "Invite sent",
+                  description: isUpdate
+                    ? "Attendees will receive the updated meeting details."
+                    : "Attendees will receive the Outlook calendar invite.",
+                });
+              },
+              onError: (err: any) => {
+                refresh();
+                toast({
+                  title: isUpdate ? "Failed to update invite" : "Failed to send invite",
+                  description: err?.data?.message || err?.message,
+                  variant: "destructive",
+                });
+              },
+            },
+          );
+        },
+        onError: () => toast({ title: "Failed to save meeting time", variant: "destructive" }),
+      },
+    );
+  };
+
+  const handleCancelMeeting = (m: any) => {
+    const hadInvite = !!m.outlookEventId;
+    if (!window.confirm(
+      hadInvite
+        ? "Cancel this meeting? Attendees will receive an Outlook cancellation."
+        : "Cancel this meeting?",
+    )) return;
+    cancelInvite.mutate(
+      { id: m.id },
+      {
+        onSuccess: () => {
+          refresh();
+          toast({
+            title: "Meeting cancelled",
+            description: hadInvite
+              ? "An Outlook cancellation was sent to attendees."
+              : undefined,
+          });
+        },
+        onError: (err: any) =>
+          toast({
+            title: "Failed to cancel meeting",
+            description: err?.data?.message || err?.message,
+            variant: "destructive",
+          }),
+      },
+    );
+  };
 
   const handleAddMeeting = () => {
     createMeeting.mutate({ id: request.id, data: { meetingType, status: "Scheduled" } }, {
@@ -689,8 +789,19 @@ function MeetingsSection({ request, config }: { request: any, config: any }) {
           {request.meetings.map((m: any) => (
             <div key={m.id} className="border border-border/60 rounded-xl p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center group bg-card gap-2">
               <div>
-                <div className="font-bold text-sm text-primary mb-1">{m.meetingType}</div>
+                <div className="font-bold text-sm text-primary mb-1 flex items-center gap-2">
+                  {m.meetingType}
+                  {m.outlookEventId && (
+                    <Badge variant="outline" className="text-[10px] font-normal">Invite sent</Badge>
+                  )}
+                </div>
                 <div className="text-sm font-medium">{m.subject || "No Subject"}</div>
+                {m.scheduledStart && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {format(new Date(m.scheduledStart), "MMM d, yyyy h:mm a")}
+                    {m.scheduledEnd ? ` - ${format(new Date(m.scheduledEnd), "h:mm a")}` : ""}
+                  </div>
+                )}
                 {(m.rescheduledCount ?? 0) > 0 && (
                   <div className="text-xs text-muted-foreground mt-1">Rescheduled {m.rescheduledCount}x</div>
                 )}
@@ -714,8 +825,18 @@ function MeetingsSection({ request, config }: { request: any, config: any }) {
                   <Button size="icon" variant="ghost" onClick={() => setEditMeetingId(null)} className="h-8 w-8"><AlertCircle className="w-4 h-4" /></Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                <div className="flex items-center gap-2 mt-2 sm:mt-0 flex-wrap">
                   <Badge variant={m.status === "Completed" ? "outline" : "secondary"} className="h-6">{m.status}</Badge>
+                  {m.status !== "Cancelled" && (
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => openInviteDialog(m)} disabled={sendInvite.isPending || updateMeeting.isPending}>
+                      <Send className="w-3.5 h-3.5 mr-1" /> {m.outlookEventId ? "Update invite" : "Send invite"}
+                    </Button>
+                  )}
+                  {m.status !== "Cancelled" && (
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive hover:text-destructive" onClick={() => handleCancelMeeting(m)} disabled={cancelInvite.isPending}>
+                      <CalendarX className="w-3.5 h-3.5 mr-1" /> Cancel
+                    </Button>
+                  )}
                   <Button size="sm" variant="ghost" className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleReschedule(m)} disabled={updateMeeting.isPending}>
                     <RefreshCw className="w-3.5 h-3.5 mr-1" /> Reschedule
                   </Button>
@@ -730,6 +851,43 @@ function MeetingsSection({ request, config }: { request: any, config: any }) {
       ) : (
         <div className="text-muted-foreground text-sm italic p-4 bg-muted/20 rounded-lg text-center">No meetings scheduled.</div>
       )}
+
+      {/* Send / update Outlook invite */}
+      <Dialog open={!!inviteMeeting} onOpenChange={(o) => !o && setInviteMeeting(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{inviteMeeting?.outlookEventId ? "Update Outlook Invite" : "Send Outlook Invite"}</DialogTitle>
+            <DialogDescription>
+              {inviteMeeting?.outlookEventId
+                ? "Attendees will receive an updated meeting from Outlook."
+                : "Creates a calendar event and sends invites to all attendees on this request."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Subject</Label>
+              <Input value={inviteSubject} onChange={(e) => setInviteSubject(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Start</Label>
+                <Input type="datetime-local" value={inviteStart} onChange={(e) => setInviteStart(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>End</Label>
+                <Input type="datetime-local" value={inviteEnd} onChange={(e) => setInviteEnd(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-full" onClick={() => setInviteMeeting(null)}>Close</Button>
+            <Button className="rounded-full" onClick={handleSendInvite} disabled={sendInvite.isPending || updateMeeting.isPending}>
+              <Send className="w-4 h-4 mr-1" />
+              {inviteMeeting?.outlookEventId ? "Send update" : "Send invite"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -21,7 +21,9 @@ interface TokenResponse {
   error_description?: string;
 }
 
-async function getAccessToken(creds: GraphCredentials): Promise<string> {
+export async function getGraphAccessToken(
+  creds: GraphCredentials,
+): Promise<string> {
   const url = `https://login.microsoftonline.com/${encodeURIComponent(creds.tenantId)}/oauth2/v2.0/token`;
   const body = new URLSearchParams({
     client_id: creds.clientId,
@@ -50,7 +52,7 @@ export async function sendGraphEmail(
   email: OutgoingEmail,
 ): Promise<void> {
   if (email.to.length === 0) return;
-  const token = await getAccessToken(creds);
+  const token = await getGraphAccessToken(creds);
   const url = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(creds.senderAddress)}/sendMail`;
   const res = await fetch(url, {
     method: "POST",

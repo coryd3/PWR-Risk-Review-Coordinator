@@ -219,6 +219,70 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /meetings/{id}/send-invite:
+    post:
+      operationId: sendMeetingInvite
+      tags: [meetings]
+      summary: Create or update the Outlook calendar invite for a meeting
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: Meeting after the invite was sent or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "400":
+          description: Meeting is missing a scheduled start or end time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Email settings are not configured or disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "502":
+          description: Microsoft Graph rejected the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+  /meetings/{id}/cancel-invite:
+    post:
+      operationId: cancelMeetingInvite
+      tags: [meetings]
+      summary: Cancel the meeting (sends an Outlook cancellation if an invite was sent)
+      parameters:
+        - $ref: "#/components/parameters/MeetingId"
+      responses:
+        "200":
+          description: Meeting after cancellation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: An invite was sent but email settings are no longer configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "502":
+          description: Microsoft Graph rejected the cancellation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
   /requests/{id}/email-drafts:
     get:
       operationId: listEmailDrafts
@@ -2397,6 +2461,12 @@ components:
           nullable: true
         active:
           type: boolean
+    ErrorMessage:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
     ErrorEnvelope:
       type: object
       required: [error]

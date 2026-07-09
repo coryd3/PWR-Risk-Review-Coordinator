@@ -35,6 +35,7 @@ import type {
   EmailTemplateUpdate,
   Error,
   ErrorEnvelope,
+  ErrorMessage,
   GenerateDraftsInput,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
@@ -907,6 +908,146 @@ export const useUpdateMeeting = <TError = ErrorType<NotFoundResponse>,
         TContext
       > => {
       return useMutation(getUpdateMeetingMutationOptions(options));
+    }
+
+export const getSendMeetingInviteUrl = (id: number,) => {
+
+
+
+
+  return `/api/meetings/${id}/send-invite`
+}
+
+/**
+ * @summary Create or update the Outlook calendar invite for a meeting
+ */
+export const sendMeetingInvite = async (id: number, options?: RequestInit): Promise<Meeting> => {
+
+  return customFetch<Meeting>(getSendMeetingInviteUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSendMeetingInviteMutationOptions = <TError = ErrorType<ErrorMessage | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendMeetingInvite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendMeetingInvite>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['sendMeetingInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendMeetingInvite>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sendMeetingInvite(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendMeetingInviteMutationResult = NonNullable<Awaited<ReturnType<typeof sendMeetingInvite>>>
+
+    export type SendMeetingInviteMutationError = ErrorType<ErrorMessage | NotFoundResponse>
+
+    /**
+ * @summary Create or update the Outlook calendar invite for a meeting
+ */
+export const useSendMeetingInvite = <TError = ErrorType<ErrorMessage | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendMeetingInvite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendMeetingInvite>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getSendMeetingInviteMutationOptions(options));
+    }
+
+export const getCancelMeetingInviteUrl = (id: number,) => {
+
+
+
+
+  return `/api/meetings/${id}/cancel-invite`
+}
+
+/**
+ * @summary Cancel the meeting (sends an Outlook cancellation if an invite was sent)
+ */
+export const cancelMeetingInvite = async (id: number, options?: RequestInit): Promise<Meeting> => {
+
+  return customFetch<Meeting>(getCancelMeetingInviteUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCancelMeetingInviteMutationOptions = <TError = ErrorType<NotFoundResponse | ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMeetingInvite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelMeetingInvite>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['cancelMeetingInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelMeetingInvite>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cancelMeetingInvite(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelMeetingInviteMutationResult = NonNullable<Awaited<ReturnType<typeof cancelMeetingInvite>>>
+
+    export type CancelMeetingInviteMutationError = ErrorType<NotFoundResponse | ErrorMessage>
+
+    /**
+ * @summary Cancel the meeting (sends an Outlook cancellation if an invite was sent)
+ */
+export const useCancelMeetingInvite = <TError = ErrorType<NotFoundResponse | ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelMeetingInvite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelMeetingInvite>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getCancelMeetingInviteMutationOptions(options));
     }
 
 export const getListEmailDraftsUrl = (id: number,) => {

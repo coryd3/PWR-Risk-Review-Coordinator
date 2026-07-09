@@ -859,6 +859,10 @@ export interface NotificationSubscriberUpdate {
   active?: boolean;
 }
 
+export interface ErrorMessage {
+  message: string;
+}
+
 export interface ErrorEnvelope {
   error: string;
 }

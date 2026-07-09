@@ -20,7 +20,9 @@ export async function getEmailSettingsRow(): Promise<EmailSettingsRow | null> {
   return rows[0] ?? null;
 }
 
-function toCredentials(row: EmailSettingsRow | null): GraphCredentials | null {
+export function toCredentials(
+  row: EmailSettingsRow | null,
+): GraphCredentials | null {
   if (!row || !row.enabled) return null;
   const { tenantId, clientId, clientSecret, senderAddress } = row;
   if (!tenantId || !clientId || !clientSecret || !senderAddress) return null;
