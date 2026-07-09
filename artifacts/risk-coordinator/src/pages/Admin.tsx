@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthContext, ROLE_LABELS, type UserRole as AppUserRole } from "@/lib/auth";
+import { EmailNotificationsAdmin } from "@/components/EmailNotificationsAdmin";
 
 const ROLE_OPTIONS: AppUserRole[] = ["admin", "contributor", "viewer", "requester"];
 
@@ -265,6 +266,8 @@ export default function Admin() {
       </div>
 
       <UsersAndRoles />
+
+      <EmailNotificationsAdmin />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>

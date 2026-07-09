@@ -40,6 +40,8 @@ const RULES: readonly RouteRule[] = [
   { methods: ["POST", "PUT", "PATCH", "DELETE"], pattern: /^\/(risk-triggers|rule-sets|email-templates)(\/|$)/, roles: ADMIN },
   // Submitting a new request — requester (plus contributor/admin).
   { methods: ["POST"], pattern: /^\/requests$/, roles: CREATE_REQUEST },
+  // Email notification settings & subscribers — admin only (all methods).
+  { methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], pattern: /^\/(email-settings|notification-subscribers)(\/|$)/, roles: ADMIN },
   // Impact dashboards — admin only.
   { methods: ["GET"], pattern: /^\/usage(\/|$)/, roles: ADMIN },
 ];

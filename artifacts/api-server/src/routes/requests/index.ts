@@ -51,6 +51,7 @@ import {
 } from "../../lib/constants";
 import { recordAudit } from "../../lib/audit";
 import { recordUsage } from "../../lib/usage";
+import { notifyNewRequest } from "../../lib/notifications";
 
 const router: IRouter = Router();
 
@@ -131,6 +132,10 @@ router.post("/requests", async (req: Request, res: Response): Promise<void> => {
     entityId: created.id,
     detail: { projectName: created.projectName },
   });
+
+  // Fire-and-forget: notify subscribers if email is configured. Never blocks
+  // or fails request creation.
+  void notifyNewRequest(created);
 
   const detail = await loadRequestDetail(created.id);
   if (!detail) {

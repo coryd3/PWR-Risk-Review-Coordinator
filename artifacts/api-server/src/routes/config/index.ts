@@ -6,11 +6,18 @@ import {
   ruleSetsTable,
   emailTemplatesTable,
   riskReviewRequestsTable,
+  emailSettingsTable,
+  notificationSubscribersTable,
+  type EmailSettingsRow,
+  type NotificationSubscriberRow,
 } from "@workspace/db";
 import {
   UpdateRiskTriggerBody,
   UpdateEmailTemplateBody,
   UpdateRuleSetBody,
+  UpdateEmailSettingsBody,
+  CreateNotificationSubscriberBody,
+  UpdateNotificationSubscriberBody,
 } from "@workspace/api-zod";
 import {
   mapRiskTrigger,
@@ -231,6 +238,190 @@ router.put(
       detail: { fields: Object.keys(values) },
     });
     res.json(mapRuleSet(updated[0]));
+  },
+);
+
+// Serialize email settings for clients. The client secret is write-only: only
+// a boolean indicating whether one is stored is ever returned.
+function mapEmailSettings(row: EmailSettingsRow | null) {
+  return {
+    enabled: row?.enabled ?? false,
+    tenantId: row?.tenantId ?? null,
+    clientId: row?.clientId ?? null,
+    clientSecretSet: Boolean(row?.clientSecret),
+    senderAddress: row?.senderAddress ?? null,
+    updatedAt: row?.updatedAt ? row.updatedAt.toISOString() : null,
+  };
+}
+
+function mapSubscriber(row: NotificationSubscriberRow) {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name ?? null,
+    active: row.active,
+    createdAt: row.createdAt ? row.createdAt.toISOString() : null,
+  };
+}
+
+// GET /api/email-settings
+router.get(
+  "/email-settings",
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db.select().from(emailSettingsTable).limit(1);
+    res.json(mapEmailSettings(rows[0] ?? null));
+  },
+);
+
+// PUT /api/email-settings
+router.put(
+  "/email-settings",
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = UpdateEmailSettingsBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+      return;
+    }
+    const values = pickDefined(parsed.data);
+    if (Object.keys(values).length === 0) {
+      res.status(400).json({ message: "No updatable fields provided" });
+      return;
+    }
+    // Atomic singleton upsert: the settings row always has id = 1, so
+    // concurrent first writes can never create duplicate rows.
+    const upserted = await db
+      .insert(emailSettingsTable)
+      .values({ id: 1, ...values })
+      .onConflictDoUpdate({
+        target: emailSettingsTable.id,
+        set: { ...values, updatedAt: new Date() },
+      })
+      .returning();
+    const saved: EmailSettingsRow = upserted[0];
+    await recordAudit(req, {
+      entityType: "email_settings",
+      entityId: saved.id,
+      action: "update",
+      // Never log the secret value itself, only which fields changed.
+      detail: { fields: Object.keys(values) },
+    });
+    res.json(mapEmailSettings(saved));
+  },
+);
+
+// GET /api/notification-subscribers
+router.get(
+  "/notification-subscribers",
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(notificationSubscribersTable)
+      .orderBy(notificationSubscribersTable.id);
+    res.json(rows.map(mapSubscriber));
+  },
+);
+
+// POST /api/notification-subscribers
+router.post(
+  "/notification-subscribers",
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = CreateNotificationSubscriberBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+      return;
+    }
+    const email = parsed.data.email.trim();
+    if (email === "") {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+    const inserted = await db
+      .insert(notificationSubscribersTable)
+      .values({
+        email,
+        name: parsed.data.name ?? null,
+        active: parsed.data.active ?? true,
+      })
+      .returning();
+    await recordAudit(req, {
+      entityType: "notification_subscriber",
+      entityId: inserted[0].id,
+      action: "create",
+      detail: { email },
+    });
+    res.status(201).json(mapSubscriber(inserted[0]));
+  },
+);
+
+// PUT /api/notification-subscribers/:id
+router.put(
+  "/notification-subscribers/:id",
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parsePathId(req);
+    if (id == null) {
+      res.status(400).json({ message: "Invalid subscriber id" });
+      return;
+    }
+    const parsed = UpdateNotificationSubscriberBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ message: "Invalid request body", issues: parsed.error.issues });
+      return;
+    }
+    const values = pickDefined(parsed.data);
+    if (typeof values.email === "string") {
+      values.email = values.email.trim();
+      if (values.email === "") {
+        res.status(400).json({ message: "Email cannot be empty" });
+        return;
+      }
+    }
+    if (Object.keys(values).length === 0) {
+      res.status(400).json({ message: "No updatable fields provided" });
+      return;
+    }
+    const updated = await db
+      .update(notificationSubscribersTable)
+      .set(values)
+      .where(eq(notificationSubscribersTable.id, id))
+      .returning();
+    if (updated.length === 0) {
+      res.status(404).json({ message: "Subscriber not found" });
+      return;
+    }
+    await recordAudit(req, {
+      entityType: "notification_subscriber",
+      entityId: id,
+      action: "update",
+      detail: { fields: Object.keys(values) },
+    });
+    res.json(mapSubscriber(updated[0]));
+  },
+);
+
+// DELETE /api/notification-subscribers/:id
+router.delete(
+  "/notification-subscribers/:id",
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parsePathId(req);
+    if (id == null) {
+      res.status(400).json({ message: "Invalid subscriber id" });
+      return;
+    }
+    const deleted = await db
+      .delete(notificationSubscribersTable)
+      .where(eq(notificationSubscribersTable.id, id))
+      .returning();
+    if (deleted.length === 0) {
+      res.status(404).json({ message: "Subscriber not found" });
+      return;
+    }
+    await recordAudit(req, {
+      entityType: "notification_subscriber",
+      entityId: id,
+      action: "delete",
+      detail: { email: deleted[0].email },
+    });
+    res.status(204).send();
   },
 );
 

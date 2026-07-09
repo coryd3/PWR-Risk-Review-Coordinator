@@ -905,6 +905,103 @@ export const UpdateRuleSetResponse = zod.object({
 
 
 /**
+ * @summary Get email notification settings (client secret is never returned)
+ */
+export const GetEmailSettingsResponse = zod.object({
+  "enabled": zod.boolean(),
+  "tenantId": zod.string().nullish(),
+  "clientId": zod.string().nullish(),
+  "clientSecretSet": zod.boolean().describe('Whether a client secret is stored. The secret itself is never returned.'),
+  "senderAddress": zod.string().nullish(),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update email notification settings
+ */
+export const UpdateEmailSettingsBody = zod.object({
+  "enabled": zod.boolean().optional(),
+  "tenantId": zod.string().nullish(),
+  "clientId": zod.string().nullish(),
+  "clientSecret": zod.string().nullish().describe('Write-only. Provide to replace the stored secret; null to clear it.'),
+  "senderAddress": zod.string().nullish()
+})
+
+export const UpdateEmailSettingsResponse = zod.object({
+  "enabled": zod.boolean(),
+  "tenantId": zod.string().nullish(),
+  "clientId": zod.string().nullish(),
+  "clientSecretSet": zod.boolean().describe('Whether a client secret is stored. The secret itself is never returned.'),
+  "senderAddress": zod.string().nullish(),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary List notification subscribers
+ */
+export const ListNotificationSubscribersResponseItem = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "active": zod.boolean(),
+  "createdAt": zod.string().nullish()
+})
+export const ListNotificationSubscribersResponse = zod.array(ListNotificationSubscribersResponseItem)
+
+
+/**
+ * @summary Add a notification subscriber
+ */
+export const CreateNotificationSubscriberBody = zod.object({
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "active": zod.boolean().optional()
+})
+
+export const CreateNotificationSubscriberResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "active": zod.boolean(),
+  "createdAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a notification subscriber
+ */
+export const UpdateNotificationSubscriberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateNotificationSubscriberBody = zod.object({
+  "email": zod.string().optional(),
+  "name": zod.string().nullish(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateNotificationSubscriberResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "active": zod.boolean(),
+  "createdAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Remove a notification subscriber
+ */
+export const DeleteNotificationSubscriberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteNotificationSubscriberResponse = zod.void()
+
+
+/**
  * @summary Get configuration options (enums and static rules)
  */
 export const GetConfigResponse = zod.object({

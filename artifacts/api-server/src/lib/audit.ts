@@ -32,6 +32,29 @@ function serializeDetail(detail: unknown): string | null {
 }
 
 /**
+ * Records an audit event from a background/system context where no Express
+ * request is available (e.g. async email notifications). Actor defaults to
+ * "system" unless provided.
+ */
+export async function recordAuditDirect(input: AuditInput): Promise<void> {
+  const values: InsertAuditEvent = {
+    entityType: input.entityType,
+    entityId: input.entityId ?? null,
+    action: input.action,
+    actor: input.actor ?? "system",
+    detail: serializeDetail(input.detail),
+  };
+  try {
+    await db.insert(auditEventsTable).values(values);
+  } catch (err) {
+    logger.warn(
+      { err, entityType: input.entityType, action: input.action },
+      "Failed to record audit event",
+    );
+  }
+}
+
+/**
  * Records an audit event for a mutating operation. Failures to write the audit
  * log are swallowed (logged at warn level) so they never break the primary
  * request, but every mutation path is expected to call this.

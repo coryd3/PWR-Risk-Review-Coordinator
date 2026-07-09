@@ -4,6 +4,7 @@
 - [Required attendee roles](required-attendee-roles.md) — live required set is DYNAMIC (stage + EPC/DBB via computeAttendeeMatrix), not a fixed 6; importer uses a separate flat set; docs are stale.
 - [Attendee matrix](attendee-matrix.md) — attendees are a matrix (meeting stage x EPC/DBB x Major x business line), not a flat list; named people are configurable defaults, never hardcoded.
 - [DB & scripts tooling](db-and-scripts-tooling.md) — drizzle generate is broken (use push + pg_dump); scripts need drizzle-orm direct dep; xlsx ESM has no readFile.
+- [Email notifications](email-notifications.md) — Graph service principal configured at runtime in Admin; secret write-only; singleton settings row (id=1 upsert); fire-and-forget send with audit.
 - [Usage tracking](usage-tracking.md) — external forwarding is production-only env; POST /usage now behind RBAC (not open); impact math frozen at write, rounded at read.
 - [RBAC session role](rbac-session-role.md) — never trust session-embedded role; re-read from DB per request so demotions apply; first-admin bootstrap needs an advisory lock.
 - [Auth login in preview iframe](replit-auth-iframe-login.md) — OIDC sign-in fails ("invalid auth request") inside the embedded preview; login() opens a top-level tab when framed.

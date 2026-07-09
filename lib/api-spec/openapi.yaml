@@ -507,6 +507,110 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /email-settings:
+    get:
+      operationId: getEmailSettings
+      tags: [config]
+      summary: Get email notification settings (client secret is never returned)
+      responses:
+        "200":
+          description: Email settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailSettings"
+    put:
+      operationId: updateEmailSettings
+      tags: [config]
+      summary: Update email notification settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailSettingsUpdate"
+      responses:
+        "200":
+          description: Updated email settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailSettings"
+
+  /notification-subscribers:
+    get:
+      operationId: listNotificationSubscribers
+      tags: [config]
+      summary: List notification subscribers
+      responses:
+        "200":
+          description: Notification subscribers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NotificationSubscriber"
+    post:
+      operationId: createNotificationSubscriber
+      tags: [config]
+      summary: Add a notification subscriber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriberInput"
+      responses:
+        "201":
+          description: Created subscriber
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriber"
+
+  /notification-subscribers/{id}:
+    put:
+      operationId: updateNotificationSubscriber
+      tags: [config]
+      summary: Update a notification subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriberUpdate"
+      responses:
+        "200":
+          description: Updated subscriber
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriber"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteNotificationSubscriber
+      tags: [config]
+      summary: Remove a notification subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /config:
     get:
       operationId: getConfig
@@ -2217,6 +2321,82 @@ components:
         success:
           type: boolean
           const: true
+    EmailSettings:
+      type: object
+      required: [enabled, clientSecretSet]
+      properties:
+        enabled:
+          type: boolean
+        tenantId:
+          type: string
+          nullable: true
+        clientId:
+          type: string
+          nullable: true
+        clientSecretSet:
+          type: boolean
+          description: Whether a client secret is stored. The secret itself is never returned.
+        senderAddress:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          nullable: true
+    EmailSettingsUpdate:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        tenantId:
+          type: string
+          nullable: true
+        clientId:
+          type: string
+          nullable: true
+        clientSecret:
+          type: string
+          nullable: true
+          description: Write-only. Provide to replace the stored secret; null to clear it.
+        senderAddress:
+          type: string
+          nullable: true
+    NotificationSubscriber:
+      type: object
+      required: [id, email, active]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          nullable: true
+    NotificationSubscriberInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+    NotificationSubscriberUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+          nullable: true
+        active:
+          type: boolean
     ErrorEnvelope:
       type: object
       required: [error]

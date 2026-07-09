@@ -820,6 +820,45 @@ export const LogoutSuccessValue = {
 } as const;
 export type LogoutSuccess = typeof LogoutSuccessValue;
 
+export interface EmailSettings {
+  enabled: boolean;
+  tenantId?: string | null;
+  clientId?: string | null;
+  /** Whether a client secret is stored. The secret itself is never returned. */
+  clientSecretSet: boolean;
+  senderAddress?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface EmailSettingsUpdate {
+  enabled?: boolean;
+  tenantId?: string | null;
+  clientId?: string | null;
+  /** Write-only. Provide to replace the stored secret; null to clear it. */
+  clientSecret?: string | null;
+  senderAddress?: string | null;
+}
+
+export interface NotificationSubscriber {
+  id: number;
+  email: string;
+  name?: string | null;
+  active: boolean;
+  createdAt?: string | null;
+}
+
+export interface NotificationSubscriberInput {
+  email: string;
+  name?: string | null;
+  active?: boolean;
+}
+
+export interface NotificationSubscriberUpdate {
+  email?: string;
+  name?: string | null;
+  active?: boolean;
+}
+
 export interface ErrorEnvelope {
   error: string;
 }
