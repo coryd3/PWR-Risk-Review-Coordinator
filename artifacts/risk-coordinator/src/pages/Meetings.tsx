@@ -104,6 +104,7 @@ export default function Meetings() {
                     <th className="px-4 py-3 font-medium">Type</th>
                     <th className="px-4 py-3 font-medium">Project</th>
                     <th className="px-4 py-3 font-medium">Scheduled Date</th>
+                    <th className="px-4 py-3 font-medium">Attendees & Stakeholders</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Invite</th>
                     <th className="px-4 py-3 font-medium text-right">Actions</th>
@@ -123,6 +124,40 @@ export default function Meetings() {
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {meeting.scheduledStart ? format(new Date(meeting.scheduledStart), "MMM d, yyyy h:mm a") : (meeting.targetDate ? `Target: ${format(new Date(meeting.targetDate), "MMM d, yyyy")}` : "Unscheduled")}
+                        </td>
+                        <td className="px-4 py-3 align-top max-w-xs">
+                          {(meeting.requiredAttendees?.length || meeting.optionalAttendees?.length) ? (
+                            <div className="space-y-1.5 text-xs">
+                              {meeting.requiredAttendees && meeting.requiredAttendees.length > 0 && (
+                                <div>
+                                  <span className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Required</span>
+                                  <div className="mt-0.5 flex flex-wrap gap-1">
+                                    {meeting.requiredAttendees.map((name: string, i: number) => (
+                                      <Badge
+                                        key={`req-${i}`}
+                                        variant={name.startsWith('Placeholder "') ? "outline" : "secondary"}
+                                        className={`text-[10px] font-normal ${name.startsWith('Placeholder "') ? "border-dashed text-muted-foreground" : ""}`}
+                                      >
+                                        {name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {meeting.optionalAttendees && meeting.optionalAttendees.length > 0 && (
+                                <div>
+                                  <span className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Optional</span>
+                                  <div className="mt-0.5 flex flex-wrap gap-1">
+                                    {meeting.optionalAttendees.map((name: string, i: number) => (
+                                      <Badge key={`opt-${i}`} variant="outline" className="text-[10px] font-normal">{name}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">No attendees</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant="outline">{meeting.status}</Badge>

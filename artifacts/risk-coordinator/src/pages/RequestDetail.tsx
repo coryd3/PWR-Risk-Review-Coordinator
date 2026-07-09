@@ -303,7 +303,9 @@ function AttendeesSection({ attendeesByRole }: { attendeesByRole: Record<string,
                     <User className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="font-medium text-sm truncate">{att.name || "Unknown"}</div>
+                    <div className={`font-medium text-sm truncate ${!att.name ? "text-muted-foreground italic" : ""}`}>
+                      {att.name || (att.isRequired ? `Placeholder "${att.role || role}"` : "Unknown")}
+                    </div>
                     {att.email && <div className="text-xs text-muted-foreground truncate">{att.email}</div>}
                     <div className="flex gap-2 mt-1.5">
                       {att.isRequired && <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">Required</Badge>}

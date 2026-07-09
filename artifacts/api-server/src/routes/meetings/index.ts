@@ -36,10 +36,15 @@ router.get("/meetings", async (_req: Request, res: Response): Promise<void> => {
   const requiredByRequest = new Map<number, string[]>();
   const optionalByRequest = new Map<number, string[]>();
   for (const a of attendees) {
-    if (a.requestId == null || !a.name || a.name.trim() === "") continue;
+    if (a.requestId == null) continue;
+    const name = a.name?.trim();
+    // Required attendees without a name are listed as a placeholder for the
+    // role so the meeting list always shows every required seat.
+    const label = name || (a.isRequired ? `Placeholder "${a.role}"` : "");
+    if (!label) continue;
     const target = a.isRequired ? requiredByRequest : optionalByRequest;
     const list = target.get(a.requestId) ?? [];
-    list.push(a.name);
+    list.push(label);
     target.set(a.requestId, list);
   }
 
