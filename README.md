@@ -8,10 +8,11 @@ A coordinator can:
 - See all requests on a **Dashboard** with summary cards and a filterable table.
 - Auto-classify each request as **Major / Non-Major** and by **business line** (server-side rules).
 - Track the **Pre-Risk → Formal Risk → Final Risk** stages via meetings and status history.
-- Generate editable **email drafts** (six template types) and **calendar invite previews** — preview/draft only, **nothing is ever sent**.
-- Manage configurable **risk triggers, email templates, and rules** on an Admin page.
+- Send, update, and cancel real **Outlook calendar invites** via Microsoft Graph (admin-configured, disabled by default), or download an `.ics` preview.
+- Generate editable **email drafts** (six template types); new-request **notification emails** go to admin-managed subscribers.
+- Manage users & roles, risk triggers, email templates, rules, email settings, and notification subscribers on an **Admin** page; measure time saved on an **Impact** page.
 
-> This is an MVP. There are **no real emails, no Outlook/Microsoft Graph calls, and no real calendar events** — those are stubbed and labeled "Future Integration". The codebase is structured to stay portable for a future Databricks App deployment wired to Outlook/Graph.
+> Sign-in is required (OpenID Connect). Four roles — admin, contributor, viewer, requester — are enforced server-side, and every mutation is audited. The codebase stays portable for a Databricks App deployment (plain fetch, standard PostgreSQL, single-process production server).
 
 ## Tech stack
 
@@ -26,9 +27,9 @@ A coordinator can:
 ```
 artifacts/
   api-server/          Express API; serves built frontend in production
-    src/lib/           rules, templates, calendar, mappers, requestService (all business logic)
-    src/integrations/  outlook/ + databricks stubs (Not implemented in MVP)
-    src/routes/        REST endpoints under /api
+    src/lib/           rules, templates, calendar, auth, roles, audit, usage, notifications (all business logic)
+    src/integrations/  graph/ (Microsoft Graph email + calendar), databricks client
+    src/routes/        REST endpoints under /api (plus /login, /callback, /logout)
   risk-coordinator/    React + Vite frontend (Dashboard, New/Edit Request, Detail, Meetings, Admin)
 lib/
   db/                  Drizzle schema, seed, migrations config
@@ -41,7 +42,7 @@ db/
 scripts/
   import-tracker.ts    Legacy Excel/CSV risk-tracker importer (idempotent)
   fixtures/            Fake sample tracker for testing the importer
-docs/                  Product, data model, rules/templates, Databricks notes
+docs/                  Full documentation set (overview, requirements, architecture, data model, API, security, integrations, business rules, operations)
 app.yaml               Databricks App start command
 .env.example           Environment variable reference
 ```
@@ -124,53 +125,19 @@ See `.env.example`. Key ones:
 - `NODE_ENV=production` makes the Express process also serve the built frontend.
 - `BASE_PATH` — frontend base path (`/` for single-process deployment).
 
-## MVP limitations / out of scope
+## Current scope notes
 
-- No real email send, Outlook event creation, Microsoft Graph / Teams calls, or availability lookup — **stubs only** (`src/integrations/outlook/*` throw "Not implemented in MVP").
-- No authentication / user accounts — `owner` / change author use placeholder coordinator values.
-- Legacy Excel/CSV tracker import is implemented (`scripts/import-tracker.ts`); see "Importing the legacy Excel tracker" above.
-- No actual Databricks deployment — only readiness (config + docs). See `docs/databricks-deployment-notes.md`.
+- The six coordinator email drafts are **not** sent automatically by design — the coordinator sends them from Outlook and marks them "Sent Manually". Only new-request notification emails and Outlook calendar invites are sent by the app (via Microsoft Graph, when configured and enabled by an admin).
+- No free-busy/availability lookup when scheduling.
+- Legacy Excel/CSV tracker import is available both in-app (Admin → Import, dry-run supported) and via CLI (`scripts/import-tracker.ts`).
 
-## Further documentation
+## Documentation
 
-- `docs/product-requirements.md` — what was built vs. the spec.
-- `docs/data-model.md` — tables and relationships.
-- `docs/rules-and-template-notes.md` — classification, validation warnings, templates, calendar defaults.
-- `docs/databricks-deployment-notes.md` — exact start command and portability notes.
+The `docs/` folder is the complete technical and functional documentation set — see [docs/README.md](docs/README.md) for the index. Highlights:
 
-## MVP Validation Checklist
-
-Runtime / portability
-
-- [x] `pnpm run build` succeeds.
-- [x] `pnpm run start` starts the production server (single process).
-- [x] Production server serves the built React frontend.
-- [x] Express binds to `0.0.0.0`.
-- [x] Port resolves via `DATABRICKS_APP_PORT || PORT || 3000`.
-- [x] `GET /api/health` (and `/api/healthz`) returns `{ "status": "ok" }`.
-- [x] Root `app.yaml` contains `command: ["corepack", "pnpm", "run", "start"]`.
-- [x] No `package-lock.json` created or required (pnpm-only).
-
-Database
-
-- [x] App uses PostgreSQL via `DATABASE_URL`; no Replit key-value store.
-- [x] Drizzle schema, `db/schema.sql`, and `db/migrations/` exist.
-- [x] Seed loads all 20 risk triggers; triggers 1 & 2 flagged Major.
-- [x] Requests are persisted in the database (not hardcoded in React); survive refresh.
-
-Business rules (server-side, in `artifacts/api-server/src/lib/rules.ts`)
-
-- [x] Trigger 1 or 2 ⇒ Major; otherwise Non-Major.
-- [x] Business line: `BESS + Solar` / `BESS` / `Solar` / `GHI` / `Other`.
-- [x] Ten non-blocking validation warnings.
-
-UI
-
-- [x] Dashboard with summary cards, table, and filters.
-- [x] New Request form persists.
-- [x] Request Detail: classification, warnings, attendees by role, meetings, notes, status history, email drafts, calendar preview, status change.
-- [x] Meeting Tracker and Admin pages.
-
-Integration safety
-
-- [x] No real email / Outlook / Graph / Teams calls; integration files are stubs labeled "Future Integration".
+- `docs/02-functional-requirements.md` — numbered requirements for every feature.
+- `docs/04-data-model.md` — every table and column.
+- `docs/05-api-reference.md` — every endpoint with roles and audit actions.
+- `docs/06-security.md` — authentication, RBAC, audit, secrets, residual risks.
+- `docs/07-integrations.md` — exactly what data enters and leaves the system.
+- `docs/databricks-deployment-notes.md` — exact start command and go-live checklist.

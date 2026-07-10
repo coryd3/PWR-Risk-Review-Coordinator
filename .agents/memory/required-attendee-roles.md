@@ -40,8 +40,8 @@ NOT vary by stage/delivery. `constants.ts` also exports a flat baseline
 **Why:** coordinators cannot run a review without the mandatory seats, so the
 app warns (never blocks) when they are absent.
 
-## Stale references to distrust
-`docs/rules-and-template-notes.md` (required-attendee section) still describes an
-old model (EPC: Business-Line Director/PM/Attorney; Non-EPC: Attorney; and
-`EPC_PRIME_ROLES`/`STANDARD_ROLES` constants) that no longer exists in code.
-Trust `rules.ts` + `constants.ts`, not that doc.
+## Stale references resolved
+The old `docs/rules-and-template-notes.md` (which described an outdated
+EPC/Non-EPC role model) was deleted in July 2026; the docs suite
+(`docs/08-business-rules.md`) now matches `rules.ts` + `constants.ts`.
+Code remains the source of truth.

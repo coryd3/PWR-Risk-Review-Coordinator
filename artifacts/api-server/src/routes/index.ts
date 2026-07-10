@@ -6,7 +6,7 @@ import requestsRouter from "./requests";
 import meetingsRouter from "./meetings";
 import emailDraftsRouter from "./emailDrafts";
 import configRouter from "./config";
-import usageRouter from "./usage";
+import usageRouter, { publicUsageRouter } from "./usage";
 import importRouter from "./import";
 import { authorizeByRole } from "../lib/roles";
 
@@ -15,6 +15,9 @@ const router: IRouter = Router();
 // Public routers (no auth required).
 router.use(healthRouter);
 router.use(authRouter);
+// POST /api/usage is deliberately open (write-only telemetry intake from
+// external tools with no browser session); reads remain admin-only below.
+router.use(publicUsageRouter);
 
 // Everything below requires an authenticated user with a permitted role.
 router.use(authorizeByRole);

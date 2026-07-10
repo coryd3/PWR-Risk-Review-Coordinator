@@ -7,12 +7,19 @@ import { USAGE_ACTIONS, BURDENED_LABOR_RATE_USD } from "../../lib/constants";
 
 const router: IRouter = Router();
 
+// Public router for telemetry intake. POST /api/usage is deliberately open
+// (no session required) so external company tools without a browser session
+// (Excel/Outlook add-ins, batch scripts) can report usage. It is write-only:
+// all reads stay on the authenticated, admin-only router below. Mounted
+// BEFORE authorizeByRole in routes/index.ts.
+export const publicUsageRouter: IRouter = Router();
+
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
 // POST /api/usage — open endpoint: submit a usage event from any platform.
-router.post("/usage", async (req: Request, res: Response): Promise<void> => {
+publicUsageRouter.post("/usage", async (req: Request, res: Response): Promise<void> => {
   const body = (req.body ?? {}) as Record<string, unknown>;
   const num = (v: unknown): number | null =>
     v == null || v === "" ? null : Number(v);
