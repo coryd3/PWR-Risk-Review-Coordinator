@@ -1,6 +1,7 @@
 {
   "name": "workspace",
   "version": "0.0.0",
+  "packageManager": "pnpm@11.13.0",
   "license": "MIT",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Note: this is a pnpm-first monorepo; pnpm is recommended for installs.\" >&2 ;; esac'",
@@ -18,8 +19,5 @@
   "devDependencies": {
     "prettier": "^3.8.4",
     "typescript": "~5.9.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
   }
 }
