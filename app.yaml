@@ -1,4 +1,4 @@
-command: ["sh", "-c", "echo 'Running DB migrations...' && npx drizzle-kit push --force --config ./lib/db/drizzle.config.ts && echo 'Migrations complete. Starting app...' && NODE_ENV=production exec node --enable-source-maps artifacts/api-server/dist/index.mjs"]
+command: ["sh", "-c", "NODE_ENV=production exec node --enable-source-maps artifacts/api-server/dist/index.mjs"]
 
 resources:
   - name: pwr-risk-review-db
