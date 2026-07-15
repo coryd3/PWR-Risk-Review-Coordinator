@@ -6,7 +6,7 @@
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Note: this is a pnpm-first monorepo; pnpm is recommended for installs.\" >&2 ;; esac'",
     "dev": "pnpm --parallel --filter @workspace/api-server --filter @workspace/risk-coordinator run dev",
-    "build": "echo pre-built",
+    "build": "BASE_PATH=/ PORT=3000 pnpm --filter @workspace/risk-coordinator --filter @workspace/api-server --if-present run build",
     "start": "NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs",
     "db:migrate": "pnpm --filter @workspace/db run push",
     "db:seed": "pnpm --filter @workspace/db run seed",
