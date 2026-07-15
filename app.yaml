@@ -1,4 +1,4 @@
-command: ["corepack", "pnpm", "run", "start"]
+command: ["sh", "-c", "export DATABASE_URL=\"postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
 
 resources:
   - name: pwr-risk-review-db
