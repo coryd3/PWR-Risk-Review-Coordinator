@@ -1,4 +1,23 @@
-command: ["sh", "-c", "export PGHOST=ep-falling-boat-e9olxvgd.database.eastus.azuredatabricks.net && export PGPORT=5432 && export PGDATABASE=databricks_postgres && export PGUSER=defe8fd5-7321-4702-943e-3a2c73c09a57 && export PGSSLMODE=require && echo \"DATABRICKS vars: HOST=[$DATABRICKS_HOST] TOKEN=[${DATABRICKS_TOKEN:0:20}...] CLIENT_ID=[$DATABRICKS_CLIENT_ID]\" && export PGPASSWORD=$(curl -sf -X POST \"${DATABRICKS_HOST}/api/2.0/database/credentials/generate\" -H \"Authorization: Bearer ${DATABRICKS_TOKEN}\" -H \"Content-Type: application/json\" -d '{\"instance_names\": [\"databricks_postgres\"]}' | python3 -c \"import sys,json; print(json.load(sys.stdin).get('token',''))\" 2>/dev/null) && echo \"PGPASSWORD length: ${#PGPASSWORD}\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
+command:
+  - sh
+  - -c
+  - |
+    export PGHOST=ep-falling-boat-e9olxvgd.database.eastus.azuredatabricks.net
+    export PGPORT=5432
+    export PGDATABASE=databricks_postgres
+    export PGUSER=defe8fd5-7321-4702-943e-3a2c73c09a57
+    export PGSSLMODE=require
+    echo "DATABRICKS_HOST=$DATABRICKS_HOST"
+    echo "DATABRICKS_CLIENT_ID=$DATABRICKS_CLIENT_ID"
+    if [ -n "$DATABRICKS_TOKEN" ]; then
+      echo "DATABRICKS_TOKEN is set"
+      PGPASSWORD=$(curl -sf -X POST "${DATABRICKS_HOST}/api/2.0/database/credentials/generate" -H "Authorization: Bearer $DATABRICKS_TOKEN" -H "Content-Type: application/json" -d '{"instance_names": ["databricks_postgres"]}' | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null)
+      export PGPASSWORD
+      echo "PGPASSWORD chars: $(printf '%s' "$PGPASSWORD" | wc -c)"
+    else
+      echo "WARNING: DATABRICKS_TOKEN not set, DB auth will fail"
+    fi
+    NODE_ENV=production exec node --enable-source-maps artifacts/api-server/dist/index.mjs
 
 resources:
   - name: pwr-risk-review-db
