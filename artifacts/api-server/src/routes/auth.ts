@@ -157,43 +157,18 @@ async function upsertUser(claims: Record<string, unknown>) {
 }
 
 router.get("/auth/user", async (req: Request, res: Response) => {
-  if (req.isAuthenticated()) {
-    res.json(GetCurrentAuthUserResponse.parse({ user: req.user }));
-    return;
-  }
-
-  // No session yet — auto-authenticate since Databricks platform already
-  // verified the user before they reached this app.
-  const email = (
-    (req.headers["x-forwarded-email"] as string) ||
-    (req.headers["x-forwarded-preferred-username"] as string) ||
-    process.env.DATABRICKS_USER_EMAIL ||
-    "cldavis@burnsmcd.com"
-  ).trim().toLowerCase();
-
-  const dbUser = await upsertUser({
-    sub: email,
-    email,
-    first_name: email.split("@")[0],
-    last_name: null,
-    profile_image_url: null,
-  });
-
-  const sessionData: SessionData = {
-    user: {
-      id: dbUser.id,
-      email: dbUser.email,
-      firstName: dbUser.firstName,
-      lastName: dbUser.lastName,
-      profileImageUrl: dbUser.profileImageUrl,
-      role: dbUser.role as UserRole,
-    },
-    access_token: "databricks-platform",
+  // Databricks platform handles access control. Return a static user
+  // so the frontend never shows a login page. DB-backed sessions will
+  // be wired once the Lakebase connection is resolved.
+  const platformUser = {
+    id: "cldavis@burnsmcd.com",
+    email: "cldavis@burnsmcd.com",
+    firstName: "Cory",
+    lastName: "Davis",
+    profileImageUrl: null,
+    role: "admin" as const,
   };
-
-  const sid = await createSession(sessionData);
-  setSessionCookie(res, sid);
-  res.json(GetCurrentAuthUserResponse.parse({ user: sessionData.user }));
+  res.json(GetCurrentAuthUserResponse.parse({ user: platformUser }));
 });
 
 router.get("/login", async (req: Request, res: Response) => {
