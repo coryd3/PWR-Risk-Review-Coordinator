@@ -1,4 +1,4 @@
-command: ["sh", "-c", "echo \"PGHOST=[$PGHOST] PGPORT=[$PGPORT] PGDATABASE=[$PGDATABASE] PGUSER=[$PGUSER]\" && export DATABASE_URL=\"postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require\" && echo \"DATABASE_URL=[$DATABASE_URL]\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
+command: ["sh", "-c", "echo \"PGHOST=[$PGHOST] PGPORT=[$PGPORT] PGDATABASE=[$PGDATABASE] PGUSER=[$PGUSER]\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
 
 resources:
   - name: pwr-risk-review-db
