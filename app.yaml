@@ -1,4 +1,4 @@
-command: ["sh", "-c", "export DATABASE_URL=\"postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
+command: ["sh", "-c", "export DATABASE_URL=\"postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require\" && export ISSUER_URL=\"https://adb-3741756209536968.8.azuredatabricks.net/oidc\" && export REPL_ID=\"6c0787dd-29b3-4ed8-8fcf-2b7a04caa2aa\" && export APP_BASE_URL=\"https://pwr-risk-review-coordinator-3741756209536968.8.azure.databricksapps.com\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
 
 resources:
   - name: pwr-risk-review-db
