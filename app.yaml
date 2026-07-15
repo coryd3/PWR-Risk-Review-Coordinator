@@ -1,4 +1,4 @@
-command: ["sh", "-c", "echo \"PGHOST=[$PGHOST] PGPORT=[$PGPORT] PGDATABASE=[$PGDATABASE] PGUSER=[$PGUSER]\" && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
+command: ["sh", "-c", "export PGHOST=ep-falling-boat-e9olxvgd.database.eastus.azuredatabricks.net && export PGPORT=5432 && export PGDATABASE=databricks_postgres && export PGUSER=defe8fd5-7321-4702-943e-3a2c73c09a57 && export PGSSLMODE=require && NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
 
 resources:
   - name: pwr-risk-review-db
