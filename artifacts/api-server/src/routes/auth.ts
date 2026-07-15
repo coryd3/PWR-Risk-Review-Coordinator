@@ -172,40 +172,8 @@ router.get("/auth/user", async (req: Request, res: Response) => {
 });
 
 router.get("/login", async (req: Request, res: Response) => {
-  // Databricks platform handles authentication — users must be logged into
-  // the workspace before they can reach this app. No OIDC redirect needed.
+  // No login needed — Databricks handles access. Just redirect to the app.
   const returnTo = getSafeReturnTo(req.query.returnTo);
-
-  // Read user identity from Databricks-injected headers, fall back to env
-  const email = (
-    (req.headers["x-forwarded-email"] as string) ||
-    (req.headers["x-forwarded-preferred-username"] as string) ||
-    process.env.DATABRICKS_USER_EMAIL ||
-    "cldavis@burnsmcd.com"
-  ).trim().toLowerCase();
-
-  const dbUser = await upsertUser({
-    sub: email,
-    email,
-    first_name: email.split("@")[0],
-    last_name: null,
-    profile_image_url: null,
-  });
-
-  const sessionData: SessionData = {
-    user: {
-      id: dbUser.id,
-      email: dbUser.email,
-      firstName: dbUser.firstName,
-      lastName: dbUser.lastName,
-      profileImageUrl: dbUser.profileImageUrl,
-      role: dbUser.role as UserRole,
-    },
-    access_token: "databricks-platform",
-  };
-
-  const sid = await createSession(sessionData);
-  setSessionCookie(res, sid);
   res.redirect(returnTo);
 });
 
