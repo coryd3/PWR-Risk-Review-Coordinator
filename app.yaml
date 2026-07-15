@@ -5,5 +5,5 @@ resources:
     lakebase:
       project: pwr-risk-review-coordinator
       branch: production
-      database: databricks-postgres
+      database: databricks_postgres
       permission: read_write
